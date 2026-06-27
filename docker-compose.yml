@@ -1,0 +1,160 @@
+###############################################################################
+# Hermes Agent — Docker Compose de production
+# Image : nousresearch/hermes-agent
+# Documentation : https://hermes-agent.nousresearch.com/docs/user-guide/docker
+###############################################################################
+
+services:
+
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes
+
+    # Lance le gateway (+ dashboard si HERMES_DASHBOARD=1)
+    command: gateway run
+
+    restart: unless-stopped
+
+    hostname: hermes
+
+    ###########################################################################
+    # Identité utilisateur
+    ###########################################################################
+    # PUID/PGID  → utilisés par s6-overlay pour chown le volume /opt/data
+    #              à définir avec l'UID/GID du propriétaire sur l'hôte
+    # HERMES_UID → UID interne du process hermes (défaut : 10000)
+    # HERMES_GID → GID interne du process hermes (défaut : 10000)
+    ###########################################################################
+    environment:
+
+      # --- Identité utilisateur -----------------------------------------------
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+
+      # --- Dashboard ----------------------------------------------------------
+      HERMES_DASHBOARD: ${HERMES_DASHBOARD:-1}
+      HERMES_DASHBOARD_HOST: ${HERMES_DASHBOARD_HOST:-0.0.0.0}
+      HERMES_DASHBOARD_PORT: ${HERMES_DASHBOARD_PORT:-9119}
+
+      # Authentification Dashboard (obligatoire sur bind non-loopback depuis juin 2026)
+      # Choisir UNE méthode parmi les trois ci-dessous :
+      #
+      # Option A — Identifiants locaux
+      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: ${HERMES_DASHBOARD_BASIC_AUTH_USERNAME:-}
+      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: ${HERMES_DASHBOARD_BASIC_AUTH_PASSWORD:-}
+      #
+      # Option B — OAuth Nous Portal
+      # HERMES_DASHBOARD_OAUTH_CLIENT_ID: ${HERMES_DASHBOARD_OAUTH_CLIENT_ID:-}
+      #
+      # Option C — OIDC
+      # HERMES_DASHBOARD_OIDC_ISSUER: ${HERMES_DASHBOARD_OIDC_ISSUER:-}
+      # HERMES_DASHBOARD_OIDC_CLIENT_ID: ${HERMES_DASHBOARD_OIDC_CLIENT_ID:-}
+
+      # --- Gateway API --------------------------------------------------------
+      API_SERVER_ENABLED: ${API_SERVER_ENABLED:-true}
+      API_SERVER_HOST: ${API_SERVER_HOST:-0.0.0.0}
+      API_SERVER_PORT: ${API_SERVER_PORT:-8642}
+      # Clé d'authentification — générer avec : openssl rand -hex 32
+      API_SERVER_KEY: ${API_SERVER_KEY}
+      # Restreindre les origines CORS si exposition publique
+      # API_SERVER_CORS_ORIGINS: ${API_SERVER_CORS_ORIGINS:-}
+
+      # --- Providers LLM ------------------------------------------------------
+      # Fournir au minimum UNE clé API
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      # OpenRouter (accès multi-providers via une seule clé)
+      # OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      # Ollama (inférence locale — utiliser le nom du service si dans le même réseau)
+      # OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+
+      # --- Messagerie ---------------------------------------------------------
+      # Telegram
+      # TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      # Discord
+      # DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      # Slack
+      # SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
+
+      # --- Diagnostic ---------------------------------------------------------
+      # HERMES_SKIP_CONFIG_MIGRATION: 0   # mettre à 1 en diagnostic uniquement
+      # HERMES_ALLOW_ROOT_GATEWAY: 0      # NE PAS activer sauf nécessité absolue
+
+    ###########################################################################
+    # Volumes
+    ###########################################################################
+    # Un seul point de montage suffit pour toute la persistance.
+    # Structure interne de /opt/data :
+    #   .env            → clés API et secrets
+    #   config.yaml     → configuration du gateway
+    #   sessions/       → historique des conversations
+    #   memories/       → mémoire persistante
+    #   skills/         → extensions installées
+    #   logs/           → journaux tournants (10 × 1 Mo)
+    #   home/           → HOME des sous-processus par profil
+    ###########################################################################
+    volumes:
+      # Persistance complète Hermes
+      - ./data:/opt/data
+
+      # Docker Backend — permet à Hermes de piloter le démon Docker de l'hôte
+      # (docker build, docker run, inspection de conteneurs…)
+      - /var/run/docker.sock:/var/run/docker.sock
+
+      # Fuseau horaire de l'hôte
+      - /etc/localtime:/etc/localtime:ro
+
+    ###########################################################################
+    # Ports
+    ###########################################################################
+    ports:
+      # Gateway API — compatible OpenAI (clients externes, Open WebUI, etc.)
+      - "${API_SERVER_PORT:-8642}:${API_SERVER_PORT:-8642}"
+
+      # Dashboard Web
+      - "${HERMES_DASHBOARD_PORT:-9119}:${HERMES_DASHBOARD_PORT:-9119}"
+
+    ###########################################################################
+    # Réseau
+    ###########################################################################
+    networks:
+      - hermes
+
+    ###########################################################################
+    # Mémoire partagée
+    ###########################################################################
+    # Requise par Chromium/Playwright (browser automation)
+    shm_size: 1g
+
+    ###########################################################################
+    # Healthcheck
+    ###########################################################################
+    # Aucun endpoint /health natif — on sonde le Dashboard ou l'API
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-s", "http://localhost:${HERMES_DASHBOARD_PORT:-9119}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+    ###########################################################################
+    # Ressources Docker
+    ###########################################################################
+    deploy:
+      resources:
+        limits:
+          cpus: "${HERMES_CPU_LIMIT:-4}"
+          memory: ${HERMES_MEM_LIMIT:-8G}
+        reservations:
+          cpus: "1"
+          memory: 2G
+
+###############################################################################
+# Réseaux
+###############################################################################
+networks:
+  hermes:
+    driver: bridge
+    # Pour connecter Ollama ou d'autres services au même réseau :
+    # ajouter le service et lui affecter le réseau "hermes"

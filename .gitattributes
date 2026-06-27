@@ -1,0 +1,8 @@
+# Normaliser toutes les fins de ligne en LF (compatible Linux/serveur)
+* text=auto eol=lf
+
+# Fichiers binaires — pas de conversion
+*.tar.gz binary
+*.zip     binary
+*.png     binary
+*.jpg     binary

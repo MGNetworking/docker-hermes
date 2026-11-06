@@ -3,8 +3,9 @@
 Déploiement Docker de **Hermes Agent** (NousResearch) : un agent IA exposant un Dashboard web
 et une Gateway API compatible OpenAI.
 
-Ce dépôt vit dans `D:\Projet\agentic-os\hermes` — **hors** de `D:\Projet\Docker-projet`. Il n'hérite
-donc d'aucun `CLAUDE.md` intermédiaire : ce fichier est autonome.
+Ce dépôt vit dans `D:\Projet\agentic-os\hermes`, l'un des projets d'agentic-os. Il hérite du `CLAUDE.md`
+d'agentic-os (règles communes à tous ses projets) ; ce fichier ne porte que ce qui concerne Hermes lui-même. Ce qui
+décrit l'ensemble (Hermes avec Foundation et le vault) vit dans le dépôt agentic-os.
 
 ---
 
@@ -16,7 +17,8 @@ hermes/
 ├── .env.example          # template versionné
 ├── .env                  # secrets réels — gitignoré
 ├── README.md             # démarrage rapide
-└── audi-technique.md     # audit technique en 21 points — la référence détaillée
+├── audi-technique.md     # audit technique en 21 points — la référence détaillée
+└── docs/hermes-agent.*   # planche : ce que permet Hermes Agent (HTML source, PNG rendu)
 ```
 
 Le dépôt ne contient **pas** de code applicatif : l'image `nousresearch/hermes-agent` vient

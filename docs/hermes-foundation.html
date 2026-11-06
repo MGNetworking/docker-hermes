@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Hermes et Foundation</title>
+<style>
+  :root { --fond:#f7f6f2; --encre:#1f2328; --gris:#5c6370; --trait:#d9d6cc;
+          --bleu:#2f5d8a; --vert:#3d7a4f; --ocre:#a8661c; --rouge:#a33a3a; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { width:1180px; background:var(--fond); color:var(--encre);
+         font:15px/1.45 "Segoe UI", system-ui, sans-serif; padding:32px 40px 36px; }
+  h1 { font-size:28px; letter-spacing:-.3px; }
+  .sous { color:var(--gris); margin:4px 0 18px; font-size:16px; }
+  svg text { font-family:"Segoe UI", system-ui, sans-serif; fill:var(--encre); }
+  .flux { display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; margin-top:18px; }
+  .f { background:#fff; border:1px solid var(--trait); border-radius:10px; padding:12px 13px; font-size:14px; }
+  .f b { display:flex; align-items:center; gap:8px; font-size:15px; margin-bottom:5px; }
+  .n { display:inline-flex; width:24px; height:24px; border-radius:50%; background:var(--bleu); color:#fff;
+       align-items:center; justify-content:center; font-size:13px; font-weight:700; flex:none; }
+  code { font-family:Consolas, monospace; font-size:13px; background:#f0eee7; padding:0 3px; border-radius:3px; }
+  .regles { margin-top:16px; background:#fbeeee; border:1px solid #e5c4c4; border-left:6px solid var(--rouge);
+            border-radius:10px; padding:13px 18px; }
+  .regles h3 { color:var(--rouge); font-size:16px; margin-bottom:6px; }
+  .regles ul { columns:2; column-gap:30px; list-style:none; font-size:14px; }
+  .regles li { padding:2px 0; break-inside:avoid; }
+  .regles li::before { content:"· "; color:var(--rouge); font-weight:700; }
+</style>
+</head>
+<body>
+  <h1>Hermes et Foundation : comment ils travailleraient ensemble</h1>
+  <p class="sous">Proposition. Hermes est la porte d'entrée à distance : il relaie et planifie, les briques pilotent leur travail,
+     le Deuxième Cerveau garde la connaissance.</p>
+
+  <svg width="1100" height="630" viewBox="0 0 1100 630" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#5c6370"/>
+      </marker>
+      <marker id="flb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#2f5d8a"/>
+      </marker>
+    </defs>
+
+    <!-- Toi -->
+    <text x="85" y="130" text-anchor="middle" font-size="17" font-weight="700">Toi</text>
+    <rect x="10" y="150" width="150" height="90" rx="10" fill="#fff" stroke="#2f5d8a" stroke-width="2"/>
+    <text x="85" y="187" text-anchor="middle" font-size="16" font-weight="600">Téléphone</text>
+    <text x="85" y="210" text-anchor="middle" font-size="14" fill="#5c6370">Telegram</text>
+    <rect x="10" y="420" width="150" height="90" rx="10" fill="#fff" stroke="#5c6370" stroke-width="1.5"/>
+    <text x="85" y="457" text-anchor="middle" font-size="16" font-weight="600">PC</text>
+    <text x="85" y="480" text-anchor="middle" font-size="14" fill="#5c6370">terminal SSH</text>
+    <text x="85" y="535" text-anchor="middle" font-size="12" fill="#5c6370">accès direct aux briques,</text>
+    <text x="85" y="551" text-anchor="middle" font-size="12" fill="#5c6370">sans passer par Hermes</text>
+
+    <!-- VPS -->
+    <rect x="190" y="20" width="700" height="600" rx="16" fill="none" stroke="#1f2328" stroke-width="1.5" stroke-dasharray="7 5"/>
+    <text x="210" y="48" font-size="15" font-weight="700" fill="#5c6370">VPS LINUX</text>
+
+    <!-- Hermes -->
+    <rect x="215" y="70" width="240" height="270" rx="12" fill="#eaf0f7" stroke="#2f5d8a" stroke-width="2"/>
+    <text x="335" y="100" text-anchor="middle" font-size="19" font-weight="700" fill="#2f5d8a">Hermes Agent</text>
+    <text x="335" y="121" text-anchor="middle" font-size="12.5" fill="#5c6370">conteneur Docker</text>
+    <text x="232" y="158" font-size="14">• Passerelle Telegram</text>
+    <text x="232" y="185" font-size="14">• Mémoire et skills (approuvées)</text>
+    <text x="232" y="212" font-size="14">• Cron : tâches planifiées</text>
+    <text x="232" y="239" font-size="14">• Son propre modèle (LLM)</text>
+    <text x="232" y="266" font-size="14">• Dashboard 9119 · API 8642</text>
+    <text x="335" y="302" text-anchor="middle" font-size="13" font-style="italic" fill="#2f5d8a">Porte d'entrée : relaie,</text>
+    <text x="335" y="320" text-anchor="middle" font-size="13" font-style="italic" fill="#2f5d8a">ne pilote pas la chaîne</text>
+
+    <!-- Deuxième Cerveau -->
+    <rect x="215" y="400" width="240" height="195" rx="12" fill="#ebf4ee" stroke="#3d7a4f" stroke-width="2"/>
+    <text x="335" y="430" text-anchor="middle" font-size="18" font-weight="700" fill="#3d7a4f">Deuxième Cerveau</text>
+    <text x="335" y="451" text-anchor="middle" font-size="12.5" fill="#5c6370">vault Knowledge, Markdown, git</text>
+    <text x="232" y="486" font-size="14">• 00 - Inbox : les captures</text>
+    <text x="232" y="512" font-size="14">• Projets, ressources, journal</text>
+    <text x="232" y="538" font-size="14">• Tri et distillation : toi</text>
+    <text x="335" y="577" text-anchor="middle" font-size="12" fill="#5c6370">sauvegardé sur GitHub (knowledge-vault)</text>
+
+    <!-- Foundation -->
+    <rect x="510" y="70" width="360" height="525" rx="12" fill="#f8f0e4" stroke="#a8661c" stroke-width="2"/>
+    <text x="690" y="97" text-anchor="middle" font-size="18" font-weight="700" fill="#a8661c">Foundation : les briques</text>
+    <text x="690" y="117" text-anchor="middle" font-size="12.5" fill="#5c6370">programmes Python qui pilotent leur modèle</text>
+
+    <rect x="540" y="135" width="300" height="62" rx="9" fill="#fff" stroke="#a8661c"/>
+    <text x="690" y="161" text-anchor="middle" font-size="16" font-weight="700">specbook</text>
+    <text x="690" y="183" text-anchor="middle" font-size="13" fill="#5c6370">besoins → analysis/, docs/</text>
+
+    <rect x="540" y="235" width="300" height="62" rx="9" fill="#fff" stroke="#a8661c"/>
+    <text x="690" y="261" text-anchor="middle" font-size="16" font-weight="700">planforge</text>
+    <text x="690" y="283" text-anchor="middle" font-size="13" fill="#5c6370">docs/ → context/, tasks/</text>
+
+    <rect x="540" y="335" width="300" height="82" rx="9" fill="#fff" stroke="#a8661c" stroke-width="2"/>
+    <text x="690" y="362" text-anchor="middle" font-size="16" font-weight="700">agent-engine</text>
+    <text x="690" y="384" text-anchor="middle" font-size="13" fill="#5c6370">tâches → code, commits, PR</text>
+    <text x="690" y="403" text-anchor="middle" font-size="12" fill="#5c6370">cycles de rôles, livraison</text>
+
+    <rect x="540" y="480" width="300" height="62" rx="9" fill="#fff" stroke="#a8661c"/>
+    <text x="690" y="506" text-anchor="middle" font-size="16" font-weight="700">jira-sync</text>
+    <text x="690" y="528" text-anchor="middle" font-size="13" fill="#5c6370">le programme Jira</text>
+
+    <line x1="690" y1="197" x2="690" y2="233" stroke="#5c6370" stroke-width="1.6" marker-end="url(#fl)"/>
+    <text x="700" y="220" font-size="12" fill="#5c6370">docs/</text>
+    <line x1="690" y1="297" x2="690" y2="333" stroke="#5c6370" stroke-width="1.6" marker-end="url(#fl)"/>
+    <text x="700" y="320" font-size="12" fill="#5c6370">contrat de tâches</text>
+    <line x1="690" y1="417" x2="690" y2="478" stroke="#5c6370" stroke-width="1.6" marker-end="url(#fl)"/>
+    <text x="700" y="453" font-size="12" fill="#5c6370">lire, en-cours, commenter</text>
+    <path d="M840,266 H856 V511 H842" fill="none" stroke="#5c6370" stroke-width="1.6" marker-end="url(#fl)"/>
+    <text x="566" y="573" font-size="12" fill="#5c6370">planforge crée les tickets, agent-engine les suit</text>
+
+    <!-- Externes -->
+    <rect x="910" y="135" width="180" height="70" rx="10" fill="#fff" stroke="#5c6370"/>
+    <text x="1000" y="164" text-anchor="middle" font-size="15" font-weight="700">Modèles LLM</text>
+    <text x="1000" y="186" text-anchor="middle" font-size="13" fill="#5c6370">DeepSeek, Claude…</text>
+    <rect x="910" y="341" width="180" height="70" rx="10" fill="#fff" stroke="#5c6370"/>
+    <text x="1000" y="370" text-anchor="middle" font-size="15" font-weight="700">GitHub</text>
+    <text x="1000" y="392" text-anchor="middle" font-size="13" fill="#5c6370">branches, PR, CI</text>
+    <rect x="910" y="476" width="180" height="70" rx="10" fill="#fff" stroke="#5c6370"/>
+    <text x="1000" y="505" text-anchor="middle" font-size="15" font-weight="700">Jira</text>
+    <text x="1000" y="527" text-anchor="middle" font-size="13" fill="#5c6370">le backlog</text>
+
+    <line x1="870" y1="170" x2="908" y2="170" stroke="#5c6370" stroke-width="1.6" marker-end="url(#fl)"/>
+    <line x1="840" y1="376" x2="908" y2="376" stroke="#5c6370" stroke-width="1.6" marker-end="url(#fl)"/>
+    <line x1="870" y1="511" x2="908" y2="511" stroke="#5c6370" stroke-width="1.6" marker-end="url(#fl)"/>
+
+    <!-- Flux de Hermes -->
+    <line x1="162" y1="195" x2="213" y2="195" stroke="#2f5d8a" stroke-width="2.2" marker-start="url(#flb)" marker-end="url(#flb)"/>
+    <text x="187" y="183" text-anchor="middle" font-size="12" font-weight="700" fill="#2f5d8a">1 à 5</text>
+
+    <line x1="457" y1="190" x2="508" y2="190" stroke="#2f5d8a" stroke-width="2.2" marker-end="url(#flb)"/>
+    <text x="482" y="179" text-anchor="middle" font-size="12" font-weight="700" fill="#2f5d8a">2 3 4</text>
+    <line x1="508" y1="240" x2="457" y2="240" stroke="#2f5d8a" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#flb)"/>
+    <text x="482" y="262" text-anchor="middle" font-size="11" fill="#2f5d8a">rapports</text>
+
+    <line x1="300" y1="342" x2="300" y2="398" stroke="#2f5d8a" stroke-width="2.2" marker-end="url(#flb)"/>
+    <text x="292" y="374" text-anchor="end" font-size="12" font-weight="700" fill="#2f5d8a">1</text>
+    <line x1="370" y1="398" x2="370" y2="342" stroke="#3d7a4f" stroke-width="2.2" stroke-dasharray="5 4" marker-end="url(#fl)"/>
+    <text x="378" y="374" font-size="12" font-weight="700" fill="#3d7a4f">5 lecture</text>
+
+    <line x1="162" y1="465" x2="188" y2="465" stroke="#5c6370" stroke-width="1.6" marker-end="url(#fl)"/>
+  </svg>
+
+  <div class="flux">
+    <div class="f"><b><span class="n">1</span>Capturer</b>Un message Telegram : Hermes le dépose dans <code>00 - Inbox</code>. Le tri reste à toi.</div>
+    <div class="f"><b><span class="n">2</span>Lancer</b>« lance planforge decompose » : Hermes exécute la commande de la brique et t'envoie le rapport.</div>
+    <div class="f"><b><span class="n">3</span>Valider</b>Une étape humaine (commit de l'analyse, fusion d'une Story semi-auto) : question sur Telegram, ta réponse, puis la commande suivante.</div>
+    <div class="f"><b><span class="n">4</span>Planifier</b>Cron la nuit : <code>agent epic &lt;id&gt;</code>, compte rendu sur Telegram le matin.</div>
+    <div class="f"><b><span class="n">5</span>Retrouver</b>Hermes lit le vault pour te répondre ; sur ta demande, il dépose dans l'Inbox un compte rendu de Foundation.</div>
+  </div>
+
+  <div class="regles">
+    <h3>Règles proposées</h3>
+    <ul>
+      <li>Hermes ne remplace aucune brique ; aucune brique ne le nomme.</li>
+      <li>Les briques n'écrivent pas dans le vault : seul Hermes y dépose, dans l'Inbox.</li>
+      <li>Les validations humaines restent ; aucune commande payante sans ton accord.</li>
+      <li>Écritures de mémoire et de skills de Hermes soumises à approbation.</li>
+      <li><code>docker.sock</code> monté = root sur l'hôte : accès par VPN, authentification obligatoire.</li>
+      <li>Prérequis : les briques fonctionnelles sous Linux.</li>
+    </ul>
+  </div>
+</body>
+</html>

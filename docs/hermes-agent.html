@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Hermes Agent</title>
+<style>
+  :root { --fond:#f7f6f2; --carte:#ffffff; --encre:#1f2328; --gris:#5c6370; --trait:#d9d6cc;
+          --bleu:#2f5d8a; --vert:#3d7a4f; --ocre:#a8661c; --violet:#6a4c93; --rouge:#a33a3a; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { width:1180px; background:var(--fond); color:var(--encre);
+         font:15px/1.45 "Segoe UI", system-ui, sans-serif; padding:36px 40px 40px; }
+  h1 { font-size:30px; letter-spacing:-.3px; }
+  .sous { color:var(--gris); margin:4px 0 26px; font-size:16px; }
+  .plan { display:grid; grid-template-columns: 250px 1fr 250px; gap:22px; align-items:stretch; }
+  .col { display:flex; flex-direction:column; gap:14px; }
+  .carte { background:var(--carte); border:1px solid var(--trait); border-radius:10px; padding:14px 16px;
+           border-top:4px solid var(--c); }
+  .carte h3 { font-size:15px; color:var(--c); margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px; }
+  .carte ul { list-style:none; }
+  .carte li { padding:2px 0; }
+  .carte li::before { content:"· "; color:var(--c); font-weight:700; }
+  .petit { color:var(--gris); font-size:13px; margin-top:6px; }
+  .coeur { background:var(--carte); border:2px solid var(--encre); border-radius:14px; padding:20px 22px;
+           display:flex; flex-direction:column; gap:14px; }
+  .coeur h2 { font-size:20px; text-align:center; }
+  .boucle { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; }
+  .etape { border:1px solid var(--trait); border-radius:8px; padding:8px 12px; background:#fbfaf7; font-weight:600; }
+  .fl { color:var(--gris); font-size:20px; }
+  .llm { text-align:center; background:#efe9f7; border:1px solid #cfc2e3; border-radius:10px; padding:12px; }
+  .llm b { color:var(--violet); font-size:17px; }
+  .duo { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .bas { margin-top:24px; display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  .cle { background:#fbeeee; border:1px solid #e5c4c4; border-left:6px solid var(--rouge); border-radius:10px; padding:14px 18px; }
+  .cle h3 { color:var(--rouge); font-size:16px; margin-bottom:6px; }
+  .comp { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px; font-size:14px; }
+  .comp div { background:#fff; border:1px solid var(--trait); border-radius:8px; padding:8px 10px; }
+  .comp b { display:block; margin-bottom:2px; }
+  .flux { position:relative; }
+  .src { color:var(--gris); font-size:12px; margin-top:18px; }
+</style>
+</head>
+<body>
+  <h1>Hermes Agent (Nous Research) : ce qu'il permet</h1>
+  <p class="sous">Un agent open source, auto-hébergeable, qui vit sur une machine (PC ou VPS Linux), garde une mémoire,
+     apprend des skills et répond depuis la messagerie.</p>
+
+  <div class="plan">
+    <!-- Entrées -->
+    <div class="col">
+      <div class="carte" style="--c:var(--bleu)">
+        <h3>1. Par où on lui parle</h3>
+        <ul>
+          <li>Terminal (CLI)</li>
+          <li>Telegram, WhatsApp, Signal</li>
+          <li>Discord, Slack</li>
+        </ul>
+        <p class="petit">Une seule « passerelle » (gateway) sert tous les canaux ; service systemd sous Linux.</p>
+      </div>
+      <div class="carte" style="--c:var(--bleu)">
+        <h3>2. Tâches planifiées</h3>
+        <ul>
+          <li>Planificateur cron intégré</li>
+          <li>Résultat envoyé sur la messagerie</li>
+        </ul>
+        <p class="petit">Commandes dangereuses refusées par défaut : personne n'est là pour les valider.</p>
+      </div>
+      <div class="carte" style="--c:var(--bleu)">
+        <h3>3. Validation à distance</h3>
+        <ul>
+          <li>Écritures de mémoire et de skills soumises à approbation</li>
+          <li>Approuvées depuis le CLI ou le téléphone</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Cœur -->
+    <div class="coeur">
+      <h2>La boucle de l'agent</h2>
+      <div class="boucle">
+        <span class="etape">Message</span><span class="fl">→</span>
+        <span class="etape">Le modèle décide</span><span class="fl">→</span>
+        <span class="etape">Appelle des outils</span><span class="fl">→</span>
+        <span class="etape">Répond</span><span class="fl">→</span>
+        <span class="etape">Retient</span>
+      </div>
+      <div class="llm">
+        <b>Le modèle (LLM)</b><br>
+        Nous Portal (modèles Hermes), OpenRouter, OpenAI, ou tout endpoint compatible
+        <div class="petit">Par exemple DeepSeek, par un endpoint compatible OpenAI</div>
+      </div>
+      <div class="duo">
+        <div class="carte" style="--c:var(--vert)">
+          <h3>Mémoire</h3>
+          <ul>
+            <li><code>MEMORY.md</code>, <code>USER.md</code></li>
+            <li>Recherche dans les sessions passées</li>
+            <li>Connecteurs externes (Honcho…)</li>
+          </ul>
+          <p class="petit">L'agent choisit lui-même ce qu'il retient.</p>
+        </div>
+        <div class="carte" style="--c:var(--vert)">
+          <h3>Skills</h3>
+          <ul>
+            <li>Créées à partir de l'expérience</li>
+            <li>Corrigées à l'usage</li>
+            <li>Format agentskills.io, Skills Hub</li>
+          </ul>
+          <p class="petit">C'est le « self-improving » : il s'améliore en travaillant.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Outils -->
+    <div class="col">
+      <div class="carte" style="--c:var(--ocre)">
+        <h3>4. Où il exécute</h3>
+        <ul>
+          <li>Local</li>
+          <li>Docker</li>
+          <li>SSH (une autre machine)</li>
+          <li>Modal, Singularity, Daytona…</li>
+        </ul>
+        <p class="petit">Espaces de travail persistants ou jetables.</p>
+      </div>
+      <div class="carte" style="--c:var(--ocre)">
+        <h3>5. Outils branchés</h3>
+        <ul>
+          <li>Client MCP : n'importe quel serveur MCP</li>
+          <li>Commandes du terminal (donc tes CLI)</li>
+        </ul>
+      </div>
+      <div class="carte" style="--c:var(--ocre)">
+        <h3>6. Sous-agents</h3>
+        <ul>
+          <li>Lancés en parallèle</li>
+          <li>Chacun sa conversation et son terminal</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="bas">
+    <div class="cle">
+      <h3>Le point qui compte pour Foundation</h3>
+      Dans Hermes, <b>le modèle pilote</b> : c'est lui qui choisit les outils, l'ordre et ce qu'il retient.
+      Dans Foundation, <b>un programme Python pilote</b> et appelle le modèle comme un outil.
+      Les deux ne se remplacent pas : Hermes peut <b>se placer devant</b> les briques, pas à leur place.
+    </div>
+    <div class="carte" style="--c:var(--violet)">
+      <h3>En une phrase</h3>
+      Un assistant personnel qui tourne en permanence sur un serveur, joignable depuis le téléphone,
+      qui se souvient de toi et apprend des procédures, et qui sait lancer des commandes sur des machines.
+    </div>
+  </div>
+  <p class="src">Sources : github.com/NousResearch/hermes-agent, hermes-agent.nousresearch.com/docs (consultés le 2026-10-30).
+     Les versions et la liste exacte des environnements d'exécution varient selon les sources.</p>
+</body>
+</html>

@@ -136,3 +136,7 @@ les volumes, l'intégration reverse proxy (Caddy / Traefik / Nginx), les ressour
 sécurité. **Le consulter avant de répondre sur ces sujets** — il est plus précis que le
 README, et le nom du fichier porte une coquille (`audi-` pour `audit-`) qui le rend facile
 à manquer.
+
+## Second cerveau
+
+`projet: hermes` (règle des captures : `CLAUDE.md` global).

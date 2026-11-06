@@ -20,6 +20,7 @@ Ce projet fournit une configuration Docker prête à l'emploi pour déployer Her
 
 ```
 hermes/
+├── install.py            # Installation guidée : vérifications, .env, démarrage
 ├── docker-compose.yml    # Configuration Docker de production
 ├── .env.example          # Template des variables à configurer
 ├── .gitignore
@@ -31,24 +32,30 @@ hermes/
 
 ## Démarrage rapide
 
-### 1. Configurer les variables d'environnement
+### 1. Installer avec le script
+
+Sur le serveur Linux, depuis le dossier du dépôt :
 
 ```bash
-cp .env.example .env
+python3 install.py
 ```
 
-Ouvrir `.env` et renseigner au minimum :
+Le script vérifie Docker, Compose, les ports et la mémoire, puis prépare le `.env` en posant ses questions :
 
-| Variable | Description |
-|----------|-------------|
-| `API_SERVER_KEY` | Clé d'auth de la Gateway — générer avec `openssl rand -hex 32` |
-| `HERMES_DASHBOARD_BASIC_AUTH_PASSWORD` | Mot de passe du Dashboard |
-| `ANTHROPIC_API_KEY` ou autre | Au moins un provider LLM |
-| `PUID` / `PGID` | UID/GID de l'hôte — obtenir avec `id -u && id -g` |
+| Le script… | Valeur |
+|---|---|
+| lit sur la machine | `PUID`, `PGID` |
+| génère | `API_SERVER_KEY` (la clé de la Gateway API) |
+| demande, sans l'afficher | le mot de passe du Dashboard, les clés des modèles (au moins une : `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`), le jeton du bot Telegram |
+| demande | l'utilisateur du Dashboard, les identifiants Telegram autorisés, les plafonds de processeurs et de mémoire |
 
-### 2. Lancer le conteneur
+Il démarre ensuite Hermes, vérifie que le Dashboard répond, et propose de lancer l'assistant du modèle
+(`hermes model`). Un `.env` existant n'est jamais écrasé sans accord ; il est créé lisible par son seul propriétaire.
+
+### 2. Sans le script
 
 ```bash
+cp .env.example .env      # puis renseigner les valeurs à la main
 docker compose up -d
 ```
 

@@ -13,6 +13,7 @@ décrit l'ensemble (Hermes avec Foundation et le vault) vit dans le dépôt agen
 
 ```
 hermes/
+├── install.py            # installation : vérifications, .env guidé, démarrage, choix du modèle
 ├── docker-compose.yml    # configuration de production, entièrement paramétrée par .env
 ├── .env.example          # template versionné
 ├── .env                  # secrets réels — gitignoré
@@ -118,6 +119,9 @@ automatiquement. Ne jamais proposer `docker compose down -v` ni la suppression d
 ---
 
 ## Exploitation
+
+Installation : `python3 install.py` (Python standard, aucune dépendance), qui prépare le `.env` sans afficher aucun
+secret. Le modifier dans le même commit que le `.env.example` et le compose quand une variable change.
 
 ```bash
 docker compose up -d

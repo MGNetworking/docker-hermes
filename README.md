@@ -20,7 +20,8 @@ Ce projet fournit une configuration Docker prête à l'emploi pour déployer Her
 
 ```
 hermes/
-├── install.py            # Installation guidée : vérifications, .env, démarrage, réglages
+├── install.py            # Installation guidée : vérifications, .env, démarrage, réglages (point d'entrée)
+├── installation/         # Une étape ou une option par fichier, appelées par install.py
 ├── reglages.conf         # Les réglages de Hermes, appliqués par install.py
 ├── docker-compose.yml    # Configuration Docker de production
 ├── .env.example          # Template des variables à configurer

@@ -13,7 +13,8 @@ décrit l'ensemble (Hermes avec Foundation et le vault) vit dans le dépôt agen
 
 ```
 hermes/
-├── install.py            # installation et mise à jour : vérifications, .env complété, démarrage, réglages
+├── install.py            # point d'entrée de l'installation et de la mise à jour : lit l'option, appelle son fichier
+├── installation/         # une étape par fichier (verifications, env, demarrage, reglages, modele) et une option par fichier (installer, reconfigurer)
 ├── reglages.conf         # les réglages de Hermes (hermes config set), versionnés
 ├── docker-compose.yml    # configuration de production, entièrement paramétrée par .env
 ├── .env.example          # template versionné
@@ -121,7 +122,8 @@ automatiquement. Ne jamais proposer `docker compose down -v` ni la suppression d
 
 ## Exploitation
 
-Installation et mise à jour : `python3 install.py` (Python standard, aucune dépendance). Il ne réécrit jamais un `.env`
+Installation et mise à jour : `python3 install.py` (Python standard, aucune dépendance). Une option = un fichier
+`installation/<nom>.py` qui expose `executer()`, plus une ligne dans `OPTIONS` d'`install.py`. Il ne réécrit jamais un `.env`
 existant (il ajoute seulement les variables nouvelles de `.env.example`) ni `data/config.yaml` (les réglages de
 `reglages.conf` passent par `hermes config set`). Le modifier dans le même commit que le `.env.example` et le compose
 quand une variable change.

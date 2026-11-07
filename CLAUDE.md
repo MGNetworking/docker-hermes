@@ -13,7 +13,8 @@ décrit l'ensemble (Hermes avec Foundation et le vault) vit dans le dépôt agen
 
 ```
 hermes/
-├── install.py            # installation : vérifications, .env guidé, démarrage, choix du modèle
+├── install.py            # installation et mise à jour : vérifications, .env complété, démarrage, réglages
+├── reglages.conf         # les réglages de Hermes (hermes config set), versionnés
 ├── docker-compose.yml    # configuration de production, entièrement paramétrée par .env
 ├── .env.example          # template versionné
 ├── .env                  # secrets réels — gitignoré
@@ -30,7 +31,7 @@ de l'amont. Ce projet est de l'exploitation, pas du développement.
 | | |
 | --- | --- |
 | Dépôt | `MGNetworking/docker-hermes`, branche `master` |
-| Image | `nousresearch/hermes-agent:latest` |
+| Image | `nousresearch/hermes-agent`, v0.23.0 épinglée par son empreinte (voir le compose) |
 | Conteneur | `hermes` |
 | Documentation amont | https://hermes-agent.nousresearch.com/docs/ |
 
@@ -120,8 +121,13 @@ automatiquement. Ne jamais proposer `docker compose down -v` ni la suppression d
 
 ## Exploitation
 
-Installation : `python3 install.py` (Python standard, aucune dépendance), qui prépare le `.env` sans afficher aucun
-secret. Le modifier dans le même commit que le `.env.example` et le compose quand une variable change.
+Installation et mise à jour : `python3 install.py` (Python standard, aucune dépendance). Il ne réécrit jamais un `.env`
+existant (il ajoute seulement les variables nouvelles de `.env.example`) ni `data/config.yaml` (les réglages de
+`reglages.conf` passent par `hermes config set`). Le modifier dans le même commit que le `.env.example` et le compose
+quand une variable change.
+
+**La version de Hermes est épinglée** par l'empreinte de l'image dans le compose : ne jamais revenir à `latest`.
+Changer de version est une décision, prise dans un commit.
 
 ```bash
 docker compose up -d

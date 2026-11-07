@@ -2,21 +2,26 @@
 """Installe Hermes sur un serveur Linux, avec Docker.
 
 Usage, depuis le dossier du dépôt, sur le serveur :
-    python3 install.py
+    python3 install.py                  première installation, ou mise à jour après un `git pull`
+    python3 install.py --reconfigurer   reposer toutes les questions du .env
 
 Dans l'ordre, une ligne OK, ÉCHEC ou ATTENTION par point :
 1. les vérifications : Linux, Docker, Compose v2, démon joignable, ports libres, mémoire disponible ;
-2. le .env : créé depuis .env.example (ou gardé), avec l'UID et le GID de l'utilisateur, la clé de l'API générée,
-   le mot de passe du Dashboard, les clés des modèles, Telegram et les plafonds de ressources ;
-3. le démarrage : `docker compose config`, `docker compose up -d`, puis l'attente du healthcheck ;
-4. le modèle : propose de lancer l'assistant `hermes model` dans le conteneur.
+2. le .env :
+   - absent : créé depuis .env.example, en posant les questions (UID et GID de l'utilisateur, clé de l'API
+     générée, mot de passe du Dashboard, clés des modèles, Telegram, plafonds de ressources) ;
+   - présent : jamais réécrit. Seules les variables apparues dans .env.example sont ajoutées à la fin (une question
+     pour chaque secret, la valeur d'exemple pour le reste), après une copie de sauvegarde .env.bak ;
+3. le démarrage : `docker compose config`, `docker compose up -d`, puis l'attente du Dashboard ;
+4. les réglages : chaque ligne de reglages.conf appliquée avec `hermes config set`, puis un redémarrage ;
+5. le modèle, à la première installation seulement : propose l'assistant `hermes model`.
 
 Aucun secret n'est affiché ni passé en ligne de commande ; le .env est créé lisible par son seul propriétaire.
-Relancer le script est sans danger : un .env existant n'est jamais écrasé sans accord.
 """
 
 from __future__ import annotations
 
+import argparse
 import getpass
 import os
 import re
@@ -33,6 +38,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 ENV = ROOT / ".env"
 EXAMPLE = ROOT / ".env.example"
+REGLAGES = ROOT / "reglages.conf"
 CONTAINER = "hermes"
 LLM_KEYS = ["DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY", "OPENROUTER_API_KEY"]
 SECRETS = {*LLM_KEYS, "API_SERVER_KEY", "HERMES_DASHBOARD_BASIC_AUTH_PASSWORD", "TELEGRAM_BOT_TOKEN"}
@@ -223,16 +229,49 @@ def ask_telegram(current: dict[str, str]) -> dict[str, str]:
         print("  Obligatoire avec un jeton : sans cette liste, n'importe qui pourrait parler au bot.")
 
 
-def configure_env() -> dict[str, str]:
+def keys_in(text: str) -> list[str]:
+    """Les clés d'un fichier .env, actives ou en commentaire, dans l'ordre."""
+    keys = []
+    for line in text.splitlines():
+        m = KEY_LINE.match(line)
+        if m and m.group(1) not in keys:
+            keys.append(m.group(1))
+    return keys
+
+
+def complete_env() -> dict[str, str]:
+    """Le .env existant n'est jamais réécrit : seules les variables nouvelles de .env.example sont ajoutées."""
+    present = set(keys_in(ENV.read_text(encoding="utf-8")))
+    example_text = EXAMPLE.read_text(encoding="utf-8")
+    example = read_env(EXAMPLE)
+    missing = [k for k in keys_in(example_text) if k not in present and k in example]
+    if not missing:
+        ok(".env gardé tel quel (aucune variable nouvelle dans .env.example)")
+        return read_env(ENV)
+    print(f"\nVariables nouvelles dans .env.example : {', '.join(missing)}")
+    lines = [f"\n# --- Ajouté par install.py le {time.strftime('%Y-%m-%d')} ---"]
+    for key in missing:
+        if key == "API_SERVER_KEY":
+            value = secrets.token_hex(32)
+        else:
+            value = ask_secret(f"{key} (Entrée pour laisser vide)") if key in SECRETS else example[key]
+        lines.append(f"{key}={value}")
+    backup = ENV.with_name(".env.bak")
+    shutil.copy2(ENV, backup)
+    os.chmod(backup, 0o600)
+    with open(ENV, "a", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+    ok(f".env complété ({', '.join(missing)}), rien d'autre n'a changé ; sauvegarde : .env.bak")
+    return read_env(ENV)
+
+
+def configure_env(reconfigure: bool) -> tuple[dict[str, str], bool]:
+    """Le .env, et s'il vient d'être créé."""
     if not EXAMPLE.exists():
         raise Stop(".env.example est introuvable : lancer le script depuis le dossier du dépôt")
+    if ENV.exists() and not reconfigure:
+        return complete_env(), False
     current = read_env(ENV) if ENV.exists() else {}
-    if current:
-        filled = [k for k, v in current.items() if v and k in SECRETS]
-        print(f"\nUn .env existe déjà (secrets renseignés : {', '.join(filled) or 'aucun'}).")
-        if not ask_yes("Le reconfigurer ?", default=False):
-            ok(".env gardé tel quel")
-            return current
 
     print("\nConfiguration du .env")
     values = dict(current)
@@ -249,9 +288,12 @@ def configure_env() -> dict[str, str]:
     values["HERMES_CPU_LIMIT"] = ask("Plafond de processeurs pour Hermes", current.get("HERMES_CPU_LIMIT") or str(min(2, cpus)))
     values["HERMES_MEM_LIMIT"] = ask("Plafond de mémoire pour Hermes (ex. 2G)", current.get("HERMES_MEM_LIMIT") or "2G")
 
+    if ENV.exists():
+        shutil.copy2(ENV, ENV.with_name(".env.bak"))
+        os.chmod(ENV.with_name(".env.bak"), 0o600)
     write_env(render_env(EXAMPLE.read_text(encoding="utf-8"), values))
     ok(f".env écrit (PUID={values['PUID']}, PGID={values['PGID']}, clé de l'API générée, lisible par toi seul)")
-    return read_env(ENV)
+    return read_env(ENV), not current
 
 
 # ── 3. Le démarrage ───────────────────────────────────────────────────────────────────────────────────
@@ -275,6 +317,10 @@ def start(values: dict[str, str]) -> None:
     print("\nDémarrage (le premier téléchargement de l'image peut prendre quelques minutes)…")
     if run(["docker", "compose", "up", "-d"], capture=False).returncode != 0:
         raise Stop("`docker compose up -d` a échoué")
+    wait_ready(values)
+
+
+def wait_ready(values: dict[str, str]) -> None:
     port = values.get("HERMES_DASHBOARD_PORT") or "9119"
     deadline = time.monotonic() + HEALTH_TIMEOUT
     state = ""
@@ -297,7 +343,41 @@ def start(values: dict[str, str]) -> None:
                "voir `docker compose logs --tail 60 hermes`")
 
 
-# ── 4. Le modèle ──────────────────────────────────────────────────────────────────────────────────────
+# ── 4. Les réglages ───────────────────────────────────────────────────────────────────────────────────
+
+
+def read_reglages() -> list[tuple[str, str]]:
+    reglages = []
+    for line in REGLAGES.read_text(encoding="utf-8").splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line:
+            key, _, value = line.partition(" ")
+            reglages.append((key, value.strip()))
+    return reglages
+
+
+def apply_reglages(values: dict[str, str]) -> None:
+    if not REGLAGES.exists():
+        warn("reglages.conf introuvable : aucun réglage appliqué")
+        return
+    print()
+    failed = 0
+    for key, value in read_reglages():
+        done = run(["docker", "compose", "exec", "-T", CONTAINER, "hermes", "config", "set", key, value])
+        if done.returncode == 0:
+            ok(f"réglage {key} = {value}")
+        else:
+            failed += 1
+            fail(f"réglage {key} = {value} : {(done.stderr or done.stdout).strip()[:200]}")
+    print("\nRedémarrage pour prendre les réglages en compte…")
+    if run(["docker", "compose", "restart", CONTAINER]).returncode != 0:
+        raise Stop("`docker compose restart` a échoué")
+    wait_ready(values)
+    if failed:
+        raise Stop(f"{failed} réglage(s) non appliqué(s) : vérifier la clé dans la documentation de Hermes")
+
+
+# ── 5. Le modèle ──────────────────────────────────────────────────────────────────────────────────────
 
 
 def choose_model() -> None:
@@ -308,19 +388,24 @@ def choose_model() -> None:
         print("  Plus tard : docker compose exec hermes hermes model")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Installe ou met à jour Hermes (Docker).")
+    parser.add_argument("--reconfigurer", action="store_true", help="reposer toutes les questions du .env")
+    args = parser.parse_args(argv)
     if not sys.stdin.isatty():
         fail("le script pose des questions : le lancer dans un terminal")
         return 1
     print("=== Installation de Hermes ===\n")
     try:
         check_system()
-        values = configure_env()
+        values, created = configure_env(args.reconfigurer)
         print()
         check_ports(values)
         check_memory(values)
         start(values)
-        choose_model()
+        apply_reglages(values)
+        if created:
+            choose_model()
     except Stop as e:
         fail(str(e))
         return 1

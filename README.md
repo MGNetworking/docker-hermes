@@ -20,7 +20,8 @@ Ce projet fournit une configuration Docker prête à l'emploi pour déployer Her
 
 ```
 hermes/
-├── install.py            # Installation guidée : vérifications, .env, démarrage
+├── install.py            # Installation guidée : vérifications, .env, démarrage, réglages
+├── reglages.conf         # Les réglages de Hermes, appliqués par install.py
 ├── docker-compose.yml    # Configuration Docker de production
 ├── .env.example          # Template des variables à configurer
 ├── .gitignore
@@ -49,8 +50,18 @@ Le script vérifie Docker, Compose, les ports et la mémoire, puis prépare le `
 | demande, sans l'afficher | le mot de passe du Dashboard, les clés des modèles (au moins une : `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`), le jeton du bot Telegram |
 | demande | l'utilisateur du Dashboard, les identifiants Telegram autorisés, les plafonds de processeurs et de mémoire |
 
-Il démarre ensuite Hermes, vérifie que le Dashboard répond, et propose de lancer l'assistant du modèle
-(`hermes model`). Un `.env` existant n'est jamais écrasé sans accord ; il est créé lisible par son seul propriétaire.
+Il démarre ensuite Hermes, vérifie que le Dashboard répond, applique les réglages de `reglages.conf`, et, à la
+première installation, propose l'assistant du modèle (`hermes model`).
+
+**Mettre à jour** : `git pull`, puis `python3 install.py`. Un `.env` existant **n'est jamais réécrit** : seules les
+variables apparues dans `.env.example` sont ajoutées à la fin (une question pour chaque secret), après une copie
+`.env.bak`. Pour reposer toutes les questions : `python3 install.py --reconfigurer`.
+
+**La version de Hermes est fixe** : l'image est épinglée par son empreinte dans `docker-compose.yml`. En changer est
+un commit, suivi de `docker compose pull` et `python3 install.py`.
+
+**Les réglages de Hermes** (approbation des commandes, mémoire, skills) sont listés dans `reglages.conf`, et appliqués
+un à un par `hermes config set` : `data/config.yaml` n'est jamais réécrit.
 
 ### 2. Sans le script
 

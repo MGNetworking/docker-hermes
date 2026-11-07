@@ -68,7 +68,7 @@ permet. Elle refuse tout nom de note hors du format (minuscules, tirets, `.md`),
 une note à 1 Mo.
 
 **Ce que Hermes peut faire, au pire.** Déposer des notes dans l'Inbox, et faire faire à Claude Code, sous le compte
-du vault, ce que ses outils permettent : lire et modifier les fichiers, git (sans push forcé), PowerShell (la carte
+du vault, ce que ses outils permettent : lire, modifier, déplacer et supprimer les fichiers, git (sans push forcé), PowerShell (la carte
 du vault). Le compte du vault n'a pas `sudo`, et ne voit que le vault (groupe commun, voir le script du vault). Une
 erreur sur le vault se répare : git garde tout l'historique, et le push forcé, qui pourrait l'effacer sur GitHub,
 est interdit.

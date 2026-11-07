@@ -23,13 +23,15 @@ DEMANDE_MAX=65536
 umask 002  # les fichiers créés restent modifiables par le groupe qui partage le vault
 
 # Ce que Claude Code peut faire dans le vault, et ce qui lui est interdit même s'il le demande.
-OUTILS="Read,Grep,Glob,Edit,Write,Skill,Bash(git:*),Bash(pwsh:*)"
+OUTILS="Read,Grep,Glob,Edit,Write,Skill,Bash(git:*),Bash(pwsh:*),Bash(rm:*),Bash(mv:*),Bash(mkdir:*)"
 INTERDITS="Bash(git push --force:*),Bash(git push -f:*),Bash(git push --force-with-lease:*)"
 CONSIGNE="Tu es lancé à distance par Hermes, l'assistant de l'utilisateur, qui te transmet ses demandes et lui \
 relaie tes réponses : aucun dialogue direct, l'outil AskUserQuestion ne fonctionne pas. Quand une étape demande une \
 confirmation ou un choix de l'utilisateur, arrête-toi et termine ta réponse par la question, avec des choix numérotés ; \
 sa réponse arrivera dans la suite de cette conversation. Réponses courtes : elles sont lues sur un téléphone. Pousser \
-(git push) seulement si l'utilisateur le demande ; jamais de push forcé."
+(git push) seulement si l'utilisateur le demande ; jamais de push forcé. Pour supprimer ou déplacer un fichier du \
+vault (une capture triée, par exemple), le faire toi-même, jusqu'au bout, sans le laisser à l'utilisateur : \
+git rm -f / git mv pour un fichier suivi par git, sinon git add puis git rm -f, ou rm / mv."
 
 refuser() { echo "refusé : $1" >&2; exit 2; }
 
@@ -47,7 +49,9 @@ lancer_claude() {
   # shellcheck disable=SC1091
   source "$HOME/.profile" > /dev/null 2>&1 || true
   set -u
-  cd "$VAULT"
+  # Le chemin réel, sans lien symbolique : Claude Code n'accepte de supprimer que dans son dossier de travail, et
+  # compare des chemins réels.
+  cd "$(realpath "$VAULT")"
   exec claude "$@" --allowedTools "$OUTILS" --disallowedTools "$INTERDITS" --append-system-prompt "$CONSIGNE"
 }
 

@@ -21,6 +21,9 @@ hermes/
 ├── .env                  # secrets réels — gitignoré
 ├── README.md             # démarrage rapide
 ├── audi-technique.md     # audit technique en 21 points — la référence détaillée
+├── docs/installation.md  # install.py : options, étapes, verrous (reglages.conf), mise à jour
+├── docs/docker-compose.md # le compose, réglage par réglage : ce qu'il fait et pourquoi
+├── docs/pare-feu-serveur.md # le pare-feu du serveur (--pare-feu)
 └── docs/hermes-agent.*   # planche : ce que permet Hermes Agent (HTML source, PNG rendu)
 ```
 

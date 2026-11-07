@@ -24,6 +24,7 @@ hermes/
 ├── installation/         # Une étape ou une option par fichier, appelées par install.py
 ├── reglages.conf         # Les réglages de Hermes, appliqués par install.py
 ├── docker-compose.yml    # Configuration Docker de production
+├── docs/                 # Installation, compose, pare-feu (voir « Documentation »)
 ├── .env.example          # Template des variables à configurer
 ├── .gitignore
 ├── .gitattributes
@@ -42,29 +43,9 @@ Sur le serveur Linux, depuis le dossier du dépôt :
 python3 install.py
 ```
 
-Le script vérifie Docker, Compose, les ports et la mémoire, puis prépare le `.env` en posant ses questions :
-
-| Le script… | Valeur |
-|---|---|
-| lit sur la machine | `PUID`, `PGID` |
-| génère | `API_SERVER_KEY` (la clé de la Gateway API) |
-| demande, sans l'afficher | le mot de passe du Dashboard, les clés des modèles (au moins une : `DEEPSEEK_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`), le jeton du bot Telegram |
-| demande | l'utilisateur du Dashboard, les identifiants Telegram autorisés, les plafonds de processeurs et de mémoire |
-
-Il démarre ensuite Hermes, vérifie que le Dashboard répond, applique les réglages de `reglages.conf`, et, à la
-première installation, propose l'assistant du modèle (`hermes model`).
-
-**Mettre à jour** : `git pull`, puis `python3 install.py`. Un `.env` existant **n'est jamais réécrit** : seules les
-variables apparues dans `.env.example` sont ajoutées à la fin (une question pour chaque secret), après une copie
-`.env.bak`. Pour reposer toutes les questions : `python3 install.py --reconfigurer`.
-
-**Le pare-feu du serveur** : `python3 install.py --pare-feu`, sans question (voir [docs/pare-feu-serveur.md](docs/pare-feu-serveur.md)).
-
-**La version de Hermes est fixe** : l'image est épinglée par son empreinte dans `docker-compose.yml`. En changer est
-un commit, suivi de `docker compose pull` et `python3 install.py`.
-
-**Les réglages de Hermes** (approbation des commandes, mémoire, skills) sont listés dans `reglages.conf`, et appliqués
-un à un par `hermes config set` : `data/config.yaml` n'est jamais réécrit.
+Il vérifie la machine, prépare le `.env` (sans jamais réécrire un `.env` existant), démarre Hermes, applique les
+verrous de `reglages.conf` et, à la première installation, propose le choix du modèle. **Le détail, les options
+(`--reconfigurer`, `--pare-feu`), les verrous et la mise à jour : [docs/installation.md](docs/installation.md).**
 
 ### 2. Sans le script
 
@@ -129,7 +110,8 @@ Le fichier `docker-compose.yml` est entièrement paramétrable via `.env`. Les p
 
 - [Providers LLM supportés](audi-technique.md#12-providers-llm) — Anthropic, OpenAI, Google, Ollama, OpenRouter…
 - [Sécurité](audi-technique.md#20-sécurité) — auth Dashboard, clé API, docker.sock, CORS
-- [Pare-feu du serveur](docs/pare-feu-serveur.md) — UFW et les ports Docker (`DOCKER-USER`), procédure à appliquer une fois
+- [Le docker-compose.yml, réglage par réglage](docs/docker-compose.md) — à quoi sert chaque réglage, et pourquoi
+- [Pare-feu du serveur](docs/pare-feu-serveur.md) — UFW et les ports Docker (`DOCKER-USER`)
 - [Reverse Proxy](audi-technique.md#15-reverse-proxy) — intégration Caddy / Traefik / Nginx
 - [Ressources Docker](audi-technique.md#19-ressources-docker) — CPU, RAM, mémoire partagée Playwright
 
@@ -148,6 +130,9 @@ Le fichier `docker-compose.yml` est entièrement paramétrable via `.env`. Les p
 
 | Ressource | Lien |
 |-----------|------|
+| L'installation : `install.py`, ses options, les verrous, la mise à jour | [docs/installation.md](docs/installation.md) |
+| Le `docker-compose.yml`, réglage par réglage | [docs/docker-compose.md](docs/docker-compose.md) |
+| Le pare-feu du serveur (`--pare-feu`) | [docs/pare-feu-serveur.md](docs/pare-feu-serveur.md) |
 | Audit technique complet | [audi-technique.md](audi-technique.md) |
 | Documentation officielle | https://hermes-agent.nousresearch.com/docs/ |
 | GitHub NousResearch | https://github.com/NousResearch/hermes-agent |

@@ -7,12 +7,16 @@ relayer, dans les deux sens. Il ne peut rien faire d'autre sur le serveur.
 
 ## Le processus
 
-1. Tu demandes à Hermes, par exemple : « fais le tri du vault et commite ».
+1. Tu demandes à Hermes, par exemple : « fais le tri du vault ».
 2. Hermes lance Claude Code dans le vault, avec ta demande telle quelle (action `claude`).
 3. Claude Code fait le travail avec les skills du vault.
 4. S'il a besoin de ton avis, Hermes te relaie sa question ; ta réponse repart dans la même conversation (action
    `suite`).
 5. Hermes te donne le résultat.
+
+Une tâche qui modifie le vault se termine toujours par un commit et un push, sans question sur git : Claude Code
+récupère d'abord ce que le dépôt distant a reçu (`git pull --rebase --autostash`), et ne commite jamais les réglages
+de l'Obsidian du serveur (`.obsidian/`). Il ne s'arrête que sur un vrai conflit, qu'il te signale.
 
 Claude Code est lancé à chaque demande, puis s'arrête : rien ne tourne entre deux demandes, et la conversation est
 gardée sur le disque du compte du vault. Chaque demande et chaque réponse appellent le modèle : elles sont payantes.

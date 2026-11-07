@@ -10,7 +10,8 @@ Lu sur la machine :
 
 Dans l'ordre, une ligne OK, ÉCHEC ou ATTENTION par point :
 1. le conteneur hermes joint le serveur (host.docker.internal, extra_hosts du compose) ;
-2. la clé SSH de Hermes, créée dans son conteneur (/opt/data/home/.ssh, donc dans data/) ;
+2. la clé SSH de Hermes, créée dans son conteneur (/opt/data/home/.ssh, donc dans data/), sous le propriétaire de
+   /opt/data (lu dans le conteneur : PUID/PGID le changent) ;
 3. la commande hermes-vault (installation/hermes-vault.sh), copiée dans /usr/local/bin, propriété de root ;
 4. l'authorized_keys du compte du vault : la clé de Hermes, réduite à hermes-vault (command=…), sans transfert ni
    terminal (restrict), acceptée seulement depuis le réseau Docker de Hermes (from=…) ;
@@ -25,6 +26,7 @@ relancer si le réseau Docker de Hermes change (après un `docker compose down`,
 
 from __future__ import annotations
 
+import functools
 import ipaddress
 import json
 import subprocess
@@ -42,9 +44,23 @@ CLE = f"{SSH_HERMES}/id_vault"
 REPERE = "hermes-vault"  # le commentaire de la clé : repère sa ligne dans authorized_keys
 
 
+@functools.cache
+def proprietaire_des_donnees() -> str:
+    """« uid:gid » du propriétaire de /opt/data, lu dans le conteneur : celui sous lequel Hermes travaille.
+
+    Il n'est pas forcément l'utilisateur `hermes` de l'image : PUID/PGID changent ce propriétaire au démarrage.
+    """
+    lu = run(["docker", "exec", "-u", "0", CONTAINER, "stat", "-c", "%u:%g", "/opt/data"])
+    identite = lu.stdout.strip()
+    if lu.returncode != 0 or ":" not in identite:
+        raise Stop(f"propriétaire de /opt/data illisible dans le conteneur : {lu.stderr.strip()[:300]}")
+    return identite
+
+
 def dans_hermes(commande: str, entree: str = "") -> subprocess.CompletedProcess[str]:
-    """Une commande shell dans le conteneur, sous l'utilisateur hermes : les fichiers créés lui appartiennent."""
-    return subprocess.run(["docker", "exec", "-i", "-u", "hermes", CONTAINER, "sh", "-c", commande],
+    """Une commande shell dans le conteneur, sous le propriétaire de /opt/data : les fichiers créés lui appartiennent."""
+    return subprocess.run(["docker", "exec", "-i", "-u", proprietaire_des_donnees(), "-e", "HOME=/opt/data/home",
+                           CONTAINER, "sh", "-c", commande],
                           input=entree, capture_output=True, text=True, check=False)
 
 

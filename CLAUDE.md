@@ -56,9 +56,10 @@ signifie exposé — l'authentification n'est pas optionnelle (voir plus bas).
 Le socket complet équivaut à un accès root sur l'hôte : quiconque atteindrait l'agent (Gateway API,
 Dashboard, Telegram, ou un texte piégé qu'il lit) agirait en root sur la machine. Décision du
 2026-11-07 : seul `docker-proxy` (`tecnativa/docker-socket-proxy`, version épinglée, aucun port
-publié) monte le socket ; Hermes le joint par `DOCKER_HOST=tcp://docker-proxy:2375` et ne peut que
-lister et inspecter les conteneurs et les images, et démarrer, arrêter ou redémarrer un conteneur
-existant. Créer un conteneur, `exec`, volumes, réseaux et build sont refusés (`POST=0`).
+publié) monte le socket ; Hermes le joint par `DOCKER_HOST=tcp://docker-proxy:2375` et n'a qu'un
+accès **en lecture** : lister et inspecter les conteneurs et les images. Tout le reste est refusé
+(`POST=0`), y compris démarrer et arrêter : vérifié le 2026-11-07, `POST=0` passe avant les
+autorisations `ALLOW_START`/`ALLOW_STOP`, et `POST=1` laisserait créer des conteneurs.
 
 Ne jamais remonter le socket dans le service `hermes`. Un besoin Docker nouveau s'accorde dans les
 variables de `docker-proxy`, une par une, en vérifiant qu'aucune ne permet de créer un conteneur.

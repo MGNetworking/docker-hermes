@@ -87,7 +87,7 @@ services:
 
       # --- Docker, par le proxy ------------------------------------------------
       # Hermes ne voit jamais le vrai socket : il parle au service docker-proxy, qui ne laisse passer
-      # que la lecture et le démarrage, l'arrêt et le redémarrage des conteneurs existants.
+      # que la lecture (lister et inspecter les conteneurs et les images).
       DOCKER_HOST: tcp://docker-proxy:2375
 
       # --- Diagnostic ---------------------------------------------------------
@@ -169,9 +169,10 @@ services:
   # docker-proxy — le seul à voir le socket Docker de l'hôte
   #############################################################################
   # Filtre l'API Docker : tout est refusé, sauf ce qui est accordé ici (1).
-  # Accordé : lister et inspecter les conteneurs et les images ; démarrer, arrêter, redémarrer
-  # un conteneur existant. Refusé : créer, supprimer, exec, volumes, réseaux, build, et tout POST
-  # hors démarrage/arrêt/redémarrage (POST=0).
+  # Accordé : lister et inspecter les conteneurs et les images, en lecture seule.
+  # Refusé : tout le reste, dont créer un conteneur, exec, volumes, réseaux, build (POST=0).
+  # Vérifié le 2026-11-07 : avec POST=0, ALLOW_START/STOP/RESTARTS sont refusés eux aussi (403) ;
+  # et POST=1 laisserait créer des conteneurs (accès root). Démarrer ou arrêter reste à l'utilisateur.
   # Version épinglée ; aucun port publié : joignable seulement par Hermes, sur le réseau hermes.
   docker-proxy:
     image: tecnativa/docker-socket-proxy:v0.5.0
@@ -180,9 +181,6 @@ services:
     environment:
       CONTAINERS: 1
       IMAGES: 1
-      ALLOW_START: 1
-      ALLOW_STOP: 1
-      ALLOW_RESTARTS: 1
       POST: 0
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

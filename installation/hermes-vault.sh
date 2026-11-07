@@ -8,24 +8,56 @@
 # Actions :
 #   aide                 la liste des actions (ne modifie rien)
 #   inbox <nom>.md       dépose une note dans 00 - Inbox ; son contenu arrive sur l'entrée standard.
-#                        Nom en minuscules avec tirets ; jamais d'écrasement ; 1 Mo au plus.
-#   commit               lance `/commit --auto` du vault avec Claude Code (git et la carte du vault seulement) :
-#                        commite l'Inbox sans confirmation, puis pousse
-# Toute autre demande est refusée.
+#                        Nom en minuscules avec tirets ; jamais d'écrasement ; 1 Mo au plus. Sans Claude Code.
+#   claude               ouvre une conversation avec Claude Code dans le vault ; la demande de l'utilisateur arrive
+#                        sur l'entrée standard. Claude Code lit lui-même les règles et les skills du vault
+#                        (/triage, /commit…) : Hermes ne fait que transmettre.
+#   suite                continue la dernière conversation (la réponse de l'utilisateur sur l'entrée standard)
+# Toute autre demande est refusée. Claude Code est lancé puis s'arrête : rien ne tourne entre deux demandes, la
+# conversation est gardée sur le disque du compte.
 
 set -euo pipefail
 VAULT="@VAULT@"  # remplacé à l'installation par le chemin du clone du vault
 TAILLE_MAX=1048576
+DEMANDE_MAX=65536
 umask 002  # les fichiers créés restent modifiables par le groupe qui partage le vault
 
+# Ce que Claude Code peut faire dans le vault, et ce qui lui est interdit même s'il le demande.
+OUTILS="Read,Grep,Glob,Edit,Write,Skill,Bash(git:*),Bash(pwsh:*)"
+INTERDITS="Bash(git push --force:*),Bash(git push -f:*),Bash(git push --force-with-lease:*)"
+CONSIGNE="Tu es lancé à distance par Hermes, l'assistant de l'utilisateur, qui te transmet ses demandes et lui \
+relaie tes réponses : aucun dialogue direct, l'outil AskUserQuestion ne fonctionne pas. Quand une étape demande une \
+confirmation ou un choix de l'utilisateur, arrête-toi et termine ta réponse par la question, avec des choix numérotés ; \
+sa réponse arrivera dans la suite de cette conversation. Réponses courtes : elles sont lues sur un téléphone. Pousser \
+(git push) seulement si l'utilisateur le demande ; jamais de push forcé."
+
 refuser() { echo "refusé : $1" >&2; exit 2; }
+
+lire_demande() {
+  local texte
+  texte="$(head -c $((DEMANDE_MAX + 1)))"
+  [[ -n "${texte//[[:space:]]/}" ]] || refuser "demande vide (elle arrive sur l'entrée standard)"
+  [[ ${#texte} -le $DEMANDE_MAX ]] || refuser "demande de plus de 64 Ko"
+  printf '%s' "$texte"
+}
+
+lancer_claude() {
+  # L'environnement du compte (PATH de Claude Code, modèle par défaut) : SSH n'ouvre pas de session de connexion.
+  set +u
+  # shellcheck disable=SC1091
+  source "$HOME/.profile" > /dev/null 2>&1 || true
+  set -u
+  cd "$VAULT"
+  exec claude "$@" --allowedTools "$OUTILS" --disallowedTools "$INTERDITS" --append-system-prompt "$CONSIGNE"
+}
 
 read -r -a mots <<< "${SSH_ORIGINAL_COMMAND:-}"
 action="${mots[0]:-aide}"
 
 case "$action" in
   aide)
-    echo "Actions : aide ; inbox <nom>.md (contenu sur l'entrée standard) ; commit"
+    echo "Actions : aide ; inbox <nom>.md (la note sur l'entrée standard) ; claude (la demande sur l'entrée standard) ;"
+    echo "suite (la réponse sur l'entrée standard, dans la dernière conversation)"
     ;;
 
   inbox)
@@ -44,18 +76,19 @@ case "$action" in
     echo "déposé : 00 - Inbox/$nom"
     ;;
 
-  commit)
-    [[ ${#mots[@]} -eq 1 ]] || refuser "commit ne prend aucun argument"
-    # L'environnement du compte (PATH de Claude Code, modèle par défaut) : SSH n'ouvre pas de session de connexion.
-    set +u
-    # shellcheck disable=SC1091
-    source "$HOME/.profile" > /dev/null 2>&1 || true
-    set -u
-    cd "$VAULT"
-    exec claude --allowedTools "Bash(git:*),Bash(pwsh:*),Read,Grep,Glob" -p "/commit --auto"
+  claude)
+    [[ ${#mots[@]} -eq 1 ]] || refuser "claude ne prend aucun argument : la demande arrive sur l'entrée standard"
+    demande="$(lire_demande)"
+    lancer_claude -p "$demande"
+    ;;
+
+  suite)
+    [[ ${#mots[@]} -eq 1 ]] || refuser "suite ne prend aucun argument : la réponse arrive sur l'entrée standard"
+    reponse="$(lire_demande)"
+    lancer_claude --continue -p "$reponse"
     ;;
 
   *)
-    refuser "action inconnue ($action). Actions : aide, inbox, commit"
+    refuser "action inconnue ($action). Actions : aide, inbox, claude, suite"
     ;;
 esac

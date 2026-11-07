@@ -117,7 +117,7 @@ Le fichier `docker-compose.yml` est entièrement paramétrable via `.env`. Les p
 - [Sécurité](audi-technique.md#20-sécurité) — auth Dashboard, clé API, docker.sock, CORS
 - [Le docker-compose.yml, réglage par réglage](docs/docker-compose.md) — à quoi sert chaque réglage, et pourquoi
 - [Pare-feu du serveur](docs/pare-feu-serveur.md) — UFW et les ports Docker (`DOCKER-USER`)
-- [Lien avec le vault](docs/lien-vault.md) — Hermes dépose dans l'Inbox et lance `/commit`, rien d'autre
+- [Lien avec le vault](docs/lien-vault.md) — Hermes dépose dans l'Inbox et transmet tes demandes à Claude Code, dans le vault
 - [Reverse Proxy](audi-technique.md#15-reverse-proxy) — intégration Caddy / Traefik / Nginx
 - [Ressources Docker](audi-technique.md#19-ressources-docker) — CPU, RAM, mémoire partagée Playwright
 

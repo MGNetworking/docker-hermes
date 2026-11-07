@@ -18,7 +18,7 @@ jamais en ligne de commande, et crée le `.env` lisible par son seul propriétai
 | `python3 install.py` | Installe Hermes, ou le met à jour : vérifications, `.env`, démarrage, réglages | La première fois, puis après chaque `git pull` |
 | `python3 install.py --reconfigurer` | Repose toutes les questions du `.env` (les valeurs existantes sont proposées), puis installe | Pour changer un mot de passe, une clé de modèle, Telegram ou un plafond de ressources |
 | `python3 install.py --pare-feu` | Met en place le pare-feu de tout le serveur, sans question | Une fois, puis après l'ajout d'un conteneur qui publie des ports (voir [pare-feu-serveur.md](pare-feu-serveur.md)) |
-| `python3 install.py --vault` | Relie Hermes au vault : il y dépose des notes et lance `/commit`, rien d'autre, sans question | Une fois le vault installé sur le serveur, puis si le réseau Docker de Hermes change (voir [lien-vault.md](lien-vault.md)) |
+| `python3 install.py --vault` | Relie Hermes au vault : il y dépose des notes et transmet tes autres demandes à Claude Code (tri, commit…), sans question | Une fois le vault installé sur le serveur, puis si le réseau Docker de Hermes change (voir [lien-vault.md](lien-vault.md)) |
 
 ## Ce que fait `python3 install.py`, étape par étape
 

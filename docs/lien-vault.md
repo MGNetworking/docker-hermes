@@ -1,8 +1,21 @@
 # Le lien entre Hermes et le vault
 
-Hermes peut **déposer une note dans l'Inbox du vault** et **y lancer `/commit --auto`** (commit de l'Inbox, puis
-push), quand tu le lui demandes (sur
-Telegram, par exemple). Il ne peut rien faire d'autre sur le serveur.
+Quand tu le lui demandes (sur Telegram, par exemple), Hermes **dépose une note dans l'Inbox du vault**, ou
+**transmet ta demande à Claude Code**, lancé dans le vault : trier l'Inbox, commiter, pousser, chercher une note…
+Claude Code connaît le vault (son `CLAUDE.md`, ses règles, ses skills `/triage`, `/commit`…) ; Hermes ne fait que
+relayer, dans les deux sens. Il ne peut rien faire d'autre sur le serveur.
+
+## Le processus
+
+1. Tu demandes à Hermes, par exemple : « fais le tri du vault et commite ».
+2. Hermes lance Claude Code dans le vault, avec ta demande telle quelle (action `claude`).
+3. Claude Code fait le travail avec les skills du vault.
+4. S'il a besoin de ton avis, Hermes te relaie sa question ; ta réponse repart dans la même conversation (action
+   `suite`).
+5. Hermes te donne le résultat.
+
+Claude Code est lancé à chaque demande, puis s'arrête : rien ne tourne entre deux demandes, et la conversation est
+gardée sur le disque du compte du vault. Chaque demande et chaque réponse appellent le modèle : elles sont payantes.
 
 ## Installer
 
@@ -27,8 +40,8 @@ Trois pièces, une par endroit :
 | Sur le serveur, dans le compte du vault (`~/.ssh/authorized_keys`) | La **clé publique** de Hermes, avec ses restrictions | Qui a le droit d'entrer, et pour faire quoi |
 | Sur le serveur (`/usr/local/bin/hermes-vault`, à root) | La **commande imposée** (source : `installation/hermes-vault.sh`) | La seule chose qui s'exécute à l'entrée |
 
-Le skill `vault` (source : `skills/vault/SKILL.md`, copié dans `data/skills/`) apprend à Hermes les deux actions et
-le format des notes.
+Le skill `vault` (source : `skills/vault/SKILL.md`, copié dans `data/skills/`) apprend à Hermes à transmettre ses demandes
+sur le vault, et le format des notes qu'il dépose.
 
 ## La sécurité, point par point
 
@@ -54,10 +67,11 @@ publique déposée dans son `authorized_keys`. Ce lien ouvre la seconde, pour la
 permet. Elle refuse tout nom de note hors du format (minuscules, tirets, `.md`), n'écrase jamais une note, et limite
 une note à 1 Mo.
 
-**Ce que Hermes peut faire, au pire.** Déposer des notes dans l'Inbox, et lancer `/commit --auto`, qui commite l'Inbox seule et la pousse (jamais
-`--force`), en faisant tourner Claude
-Code sous le compte du vault avec les seuls outils git, PowerShell (la carte du vault) et la lecture. Le compte du
-vault n'a pas `sudo`, et ne voit que le vault (groupe commun, voir le script du vault).
+**Ce que Hermes peut faire, au pire.** Déposer des notes dans l'Inbox, et faire faire à Claude Code, sous le compte
+du vault, ce que ses outils permettent : lire et modifier les fichiers, git (sans push forcé), PowerShell (la carte
+du vault). Le compte du vault n'a pas `sudo`, et ne voit que le vault (groupe commun, voir le script du vault). Une
+erreur sur le vault se répare : git garde tout l'historique, et le push forcé, qui pourrait l'effacer sur GitHub,
+est interdit.
 
 **Ce qui ne change pas.** Ton accès SSH au serveur, tes clés, ton compte : ce lien n'y touche pas. La règle de pare-feu
 ajoutée n'accepte SSH que depuis le réseau Docker de Hermes.

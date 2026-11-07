@@ -14,7 +14,7 @@ décrit l'ensemble (Hermes avec Foundation et le vault) vit dans le dépôt agen
 ```
 hermes/
 ├── install.py            # point d'entrée de l'installation et de la mise à jour : lit l'option, appelle son fichier
-├── installation/         # une étape par fichier (verifications, env, demarrage, reglages, modele) et une option par fichier (installer, reconfigurer, pare_feu)
+├── installation/         # une étape par fichier (verifications, env, demarrage, reglages, modele) et une option par fichier (installer, reconfigurer, pare_feu, vault) ; hermes-vault.sh, la commande imposée à la clé de Hermes sur le serveur
 ├── reglages.conf         # les réglages de Hermes (hermes config set), versionnés
 ├── docker-compose.yml    # configuration de production, entièrement paramétrée par .env
 ├── .env.example          # template versionné
@@ -24,6 +24,8 @@ hermes/
 ├── docs/installation.md  # install.py : options, étapes, verrous (reglages.conf), mise à jour
 ├── docs/docker-compose.md # le compose, réglage par réglage : ce qu'il fait et pourquoi
 ├── docs/pare-feu-serveur.md # le pare-feu du serveur (--pare-feu)
+├── docs/lien-vault.md    # le lien avec le vault (--vault) : clé SSH bridée, commande imposée, sécurité
+├── skills/vault/SKILL.md # le skill vault, copié dans data/skills par --vault
 └── docs/hermes-agent.*   # planche : ce que permet Hermes Agent (HTML source, PNG rendu)
 ```
 

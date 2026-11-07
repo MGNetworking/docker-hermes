@@ -133,6 +133,11 @@ services:
     networks:
       - hermes
 
+    # Le serveur lui-même, joignable depuis le conteneur sous ce nom : Hermes y rejoint le vault en SSH
+    # (install.py --vault, docs/lien-vault.md).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
     depends_on:
       - docker-proxy
 

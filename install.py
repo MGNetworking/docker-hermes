@@ -5,6 +5,7 @@ Usage, depuis le dossier du dépôt, sur le serveur :
     python3 install.py                  première installation, ou mise à jour après un `git pull`
     python3 install.py --reconfigurer   reposer toutes les questions du .env
     python3 install.py --pare-feu       mettre en place le pare-feu du serveur (docs/pare-feu-serveur.md)
+    python3 install.py --vault          relier Hermes au vault (docs/lien-vault.md)
     python3 install.py --help           la liste des options
 
 Sans option, dans l'ordre, une ligne OK, ÉCHEC ou ATTENTION par point :
@@ -37,6 +38,7 @@ DEFAUT = "installer"  # sans option : installation/installer.py
 OPTIONS = {  # option → fichier de installation/ qui la réalise
     "--reconfigurer": "reconfigurer",
     "--pare-feu": "pare_feu",
+    "--vault": "vault",
 }
 
 

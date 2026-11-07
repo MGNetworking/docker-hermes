@@ -43,6 +43,7 @@ Docker en lecture seule. Tous les réglages variables passent par le `.env` (pr�
 |---|---|---|
 | `ports` | Publient le Dashboard et la Gateway API sur le serveur (`HERMES_DASHBOARD_PORT`, `API_SERVER_PORT`) | Pour y accéder depuis le réseau ; le pare-feu du serveur décide d'où ([pare-feu-serveur.md](pare-feu-serveur.md)) |
 | `networks: hermes` | Un réseau Docker propre à Hermes et à son proxy | `docker-proxy` n'est joignable que par Hermes, jamais depuis le réseau |
+| `extra_hosts: host.docker.internal:host-gateway` | Donne au conteneur un nom pour joindre le serveur lui-même | Hermes y rejoint le vault en SSH ([lien-vault.md](lien-vault.md)) |
 | `depends_on: docker-proxy` | Démarre le proxy avant Hermes | Hermes trouve Docker dès son démarrage |
 | `shm_size: 1g` | La mémoire partagée du conteneur | Requise par le navigateur que Hermes pilote (Chromium) ; sans elle, les sessions navigateur plantent sans message clair |
 | `healthcheck` | Docker interroge le Dashboard toutes les 30 s | Hermes n'a pas d'adresse `/health` : le Dashboard sert de témoin |

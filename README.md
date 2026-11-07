@@ -28,7 +28,8 @@ hermes/
 ├── installation/         # Une étape ou une option par fichier, appelées par install.py
 ├── reglages.conf         # Les réglages de Hermes, appliqués par install.py
 ├── docker-compose.yml    # Configuration Docker de production
-├── docs/                 # Installation, compose, pare-feu (voir « Documentation »)
+├── docs/                 # Installation, compose, pare-feu, lien avec le vault (voir « Documentation »)
+├── skills/               # Les skills de Hermes versionnés ici (vault), copiés par install.py
 ├── .env.example          # Template des variables à configurer
 ├── .gitignore
 ├── .gitattributes
@@ -49,7 +50,7 @@ python3 install.py
 
 Il vérifie la machine, prépare le `.env` (sans jamais réécrire un `.env` existant), démarre Hermes, applique les
 verrous de `reglages.conf` et, à la première installation, propose le choix du modèle. **Le détail, les options
-(`--reconfigurer`, `--pare-feu`), les verrous et la mise à jour : [docs/installation.md](docs/installation.md).**
+(`--reconfigurer`, `--pare-feu`, `--vault`), les verrous et la mise à jour : [docs/installation.md](docs/installation.md).**
 
 ### 2. Sans le script
 
@@ -116,6 +117,7 @@ Le fichier `docker-compose.yml` est entièrement paramétrable via `.env`. Les p
 - [Sécurité](audi-technique.md#20-sécurité) — auth Dashboard, clé API, docker.sock, CORS
 - [Le docker-compose.yml, réglage par réglage](docs/docker-compose.md) — à quoi sert chaque réglage, et pourquoi
 - [Pare-feu du serveur](docs/pare-feu-serveur.md) — UFW et les ports Docker (`DOCKER-USER`)
+- [Lien avec le vault](docs/lien-vault.md) — Hermes dépose dans l'Inbox et lance `/commit`, rien d'autre
 - [Reverse Proxy](audi-technique.md#15-reverse-proxy) — intégration Caddy / Traefik / Nginx
 - [Ressources Docker](audi-technique.md#19-ressources-docker) — CPU, RAM, mémoire partagée Playwright
 
@@ -137,6 +139,7 @@ Le fichier `docker-compose.yml` est entièrement paramétrable via `.env`. Les p
 | L'installation : `install.py`, ses options, les verrous, la mise à jour | [docs/installation.md](docs/installation.md) |
 | Le `docker-compose.yml`, réglage par réglage | [docs/docker-compose.md](docs/docker-compose.md) |
 | Le pare-feu du serveur (`--pare-feu`) | [docs/pare-feu-serveur.md](docs/pare-feu-serveur.md) |
+| Le lien avec le vault (`--vault`) | [docs/lien-vault.md](docs/lien-vault.md) |
 | Audit technique complet | [audi-technique.md](audi-technique.md) |
 | Documentation officielle | https://hermes-agent.nousresearch.com/docs/ |
 | GitHub NousResearch | https://github.com/NousResearch/hermes-agent |

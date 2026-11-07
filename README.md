@@ -58,6 +58,8 @@ première installation, propose l'assistant du modèle (`hermes model`).
 variables apparues dans `.env.example` sont ajoutées à la fin (une question pour chaque secret), après une copie
 `.env.bak`. Pour reposer toutes les questions : `python3 install.py --reconfigurer`.
 
+**Le pare-feu du serveur** : `python3 install.py --pare-feu` (voir [docs/pare-feu-serveur.md](docs/pare-feu-serveur.md)).
+
 **La version de Hermes est fixe** : l'image est épinglée par son empreinte dans `docker-compose.yml`. En changer est
 un commit, suivi de `docker compose pull` et `python3 install.py`.
 

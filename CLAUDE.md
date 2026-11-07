@@ -14,7 +14,7 @@ décrit l'ensemble (Hermes avec Foundation et le vault) vit dans le dépôt agen
 ```
 hermes/
 ├── install.py            # point d'entrée de l'installation et de la mise à jour : lit l'option, appelle son fichier
-├── installation/         # une étape par fichier (verifications, env, demarrage, reglages, modele) et une option par fichier (installer, reconfigurer)
+├── installation/         # une étape par fichier (verifications, env, demarrage, reglages, modele) et une option par fichier (installer, reconfigurer, pare_feu)
 ├── reglages.conf         # les réglages de Hermes (hermes config set), versionnés
 ├── docker-compose.yml    # configuration de production, entièrement paramétrée par .env
 ├── .env.example          # template versionné

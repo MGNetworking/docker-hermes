@@ -4,6 +4,7 @@
 Usage, depuis le dossier du dépôt, sur le serveur :
     python3 install.py                  première installation, ou mise à jour après un `git pull`
     python3 install.py --reconfigurer   reposer toutes les questions du .env
+    python3 install.py --pare-feu       mettre en place le pare-feu du serveur (docs/pare-feu-serveur.md)
     python3 install.py --help           la liste des options
 
 Sans option, dans l'ordre, une ligne OK, ÉCHEC ou ATTENTION par point :
@@ -35,6 +36,7 @@ from installation.commun import Stop, fail
 DEFAUT = "installer"  # sans option : installation/installer.py
 OPTIONS = {  # option → fichier de installation/ qui la réalise
     "--reconfigurer": "reconfigurer",
+    "--pare-feu": "pare_feu",
 }
 
 
@@ -48,7 +50,7 @@ def main(argv: list[str] | None = None) -> int:
     if not sys.stdin.isatty():
         fail("le script pose des questions : le lancer dans un terminal")
         return 1
-    print("=== Installation de Hermes ===\n")
+    print("=== Installation de Hermes ===\n" if not args.option else f"=== install.py --{args.option.replace('_', '-')} ===\n")
     try:
         importlib.import_module(f"installation.{args.option or DEFAUT}").executer()
     except Stop as e:
@@ -58,7 +60,8 @@ def main(argv: list[str] | None = None) -> int:
         print()
         fail("interrompu")
         return 130
-    print("\nÀ vérifier ensuite : `docker stats --no-stream hermes`, et un message à ton bot Telegram.")
+    if not args.option:
+        print("\nÀ vérifier ensuite : `docker stats --no-stream hermes`, et un message à ton bot Telegram.")
     return 0
 
 

@@ -67,8 +67,9 @@
       <div class="carte" style="--c:var(--bleu)">
         <h3>3. Validation à distance</h3>
         <ul>
-          <li>Écritures de mémoire et de skills soumises à approbation</li>
-          <li>Approuvées depuis le CLI ou le téléphone</li>
+          <li>Commandes dangereuses soumises à ton accord</li>
+          <li>Refuser, une fois, pour la session ou toujours</li>
+          <li>Depuis Telegram, le Dashboard ou le terminal</li>
         </ul>
       </div>
     </div>
@@ -86,7 +87,7 @@
       <div class="llm">
         <b>Le modèle (LLM)</b><br>
         Nous Portal (modèles Hermes), OpenRouter, OpenAI, ou tout endpoint compatible
-        <div class="petit">Par exemple DeepSeek, par un endpoint compatible OpenAI</div>
+        <div class="petit">Ici : DeepSeek, par son fournisseur intégré</div>
       </div>
       <div class="duo">
         <div class="carte" style="--c:var(--vert)">
@@ -96,7 +97,7 @@
             <li>Recherche dans les sessions passées</li>
             <li>Connecteurs externes (Honcho…)</li>
           </ul>
-          <p class="petit">L'agent choisit lui-même ce qu'il retient.</p>
+          <p class="petit">Ici : seulement à ta demande (rappels désactivés).</p>
         </div>
         <div class="carte" style="--c:var(--vert)">
           <h3>Skills</h3>
@@ -105,7 +106,7 @@
             <li>Corrigées à l'usage</li>
             <li>Format agentskills.io, Skills Hub</li>
           </ul>
-          <p class="petit">C'est le « self-improving » : il s'améliore en travaillant.</p>
+          <p class="petit">« Self-improving » ; ici : seulement à ta demande.</p>
         </div>
       </div>
     </div>
@@ -141,10 +142,11 @@
 
   <div class="bas">
     <div class="cle">
-      <h3>Le point qui compte pour Foundation</h3>
-      Dans Hermes, <b>le modèle pilote</b> : c'est lui qui choisit les outils, l'ordre et ce qu'il retient.
-      Dans Foundation, <b>un programme Python pilote</b> et appelle le modèle comme un outil.
-      Les deux ne se remplacent pas : Hermes peut <b>se placer devant</b> les briques, pas à leur place.
+      <h3>Ce que règle ce déploiement</h3>
+      <b>Version épinglée</b> de l'image ; <b>Docker en lecture seule</b>, par un proxy filtrant (jamais le socket) ;
+      <b>verrous</b> : commandes dangereuses approuvées par toi, mémoire et skills seulement à ta demande ;
+      <b>Telegram</b> limité à tes identifiants ; <b>Dashboard</b> derrière une connexion ; <b>pare-feu</b> du serveur.
+      Tout s'installe et se met à jour par <code>install.py</code>.
     </div>
     <div class="carte" style="--c:var(--violet)">
       <h3>En une phrase</h3>
@@ -152,7 +154,7 @@
       qui se souvient de toi et apprend des procédures, et qui sait lancer des commandes sur des machines.
     </div>
   </div>
-  <p class="src">Sources : github.com/NousResearch/hermes-agent, hermes-agent.nousresearch.com/docs (consultés le 2026-10-30).
+  <p class="src">Sources : github.com/NousResearch/hermes-agent, hermes-agent.nousresearch.com/docs (consultés le 2026-10-30) ; réglages de ce dépôt au 2026-11-07.
      Les versions et la liste exacte des environnements d'exécution varient selon les sources.</p>
 </body>
 </html>

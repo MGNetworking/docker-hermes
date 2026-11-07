@@ -12,6 +12,10 @@ Hermes est un agent IA développé par NousResearch. Il s'appuie sur les grands 
 - une **Gateway API** compatible OpenAI pour l'intégrer à n'importe quel client (Open WebUI, applications mobiles, Discord, Telegram…)
 - plus de **20 plateformes de messagerie** supportées nativement
 
+![Hermes Agent : ce qu'il permet, et ce que règle ce déploiement](docs/hermes-agent.png)
+
+> Planche générée depuis [docs/hermes-agent.html](docs/hermes-agent.html) : modifier le HTML, puis régénérer le PNG.
+
 ---
 
 ## Ce que fait ce dépôt

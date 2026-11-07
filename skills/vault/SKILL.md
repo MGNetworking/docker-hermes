@@ -42,7 +42,7 @@ ssh -F /opt/data/home/.ssh/config vault inbox nom-de-la-note.md < /tmp/nom-de-la
 - Aucun tag, aucun lien `[[...]]` : le vault les crée lui-même au triage.
 - Une note existante n'est jamais écrasée : choisir un autre nom.
 
-**Commiter le vault** :
+**Commiter le vault** : commite les notes de l'Inbox et les pousse sur le dépôt du vault, sans autre question.
 
 ```bash
 ssh -F /opt/data/home/.ssh/config vault commit
@@ -64,4 +64,5 @@ ssh -F /opt/data/home/.ssh/config vault aide
 ## Verification
 
 - Après un dépôt : la réponse est `déposé : 00 - Inbox/<nom>`.
-- Après un commit : la réponse de /commit donne le message du commit.
+- Après un commit : la réponse donne le message du commit et le résultat du push, ou « rien à commiter ». Un push
+  refusé est à rapporter tel quel à l'utilisateur : le commit reste fait sur le serveur.

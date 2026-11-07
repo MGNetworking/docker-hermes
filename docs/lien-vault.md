@@ -1,6 +1,7 @@
 # Le lien entre Hermes et le vault
 
-Hermes peut **déposer une note dans l'Inbox du vault** et **y lancer `/commit`**, quand tu le lui demandes (sur
+Hermes peut **déposer une note dans l'Inbox du vault** et **y lancer `/commit --auto`** (commit de l'Inbox, puis
+push), quand tu le lui demandes (sur
 Telegram, par exemple). Il ne peut rien faire d'autre sur le serveur.
 
 ## Installer
@@ -53,7 +54,8 @@ publique déposée dans son `authorized_keys`. Ce lien ouvre la seconde, pour la
 permet. Elle refuse tout nom de note hors du format (minuscules, tirets, `.md`), n'écrase jamais une note, et limite
 une note à 1 Mo.
 
-**Ce que Hermes peut faire, au pire.** Déposer des notes dans l'Inbox, et lancer `/commit`, qui fait tourner Claude
+**Ce que Hermes peut faire, au pire.** Déposer des notes dans l'Inbox, et lancer `/commit --auto`, qui commite l'Inbox seule et la pousse (jamais
+`--force`), en faisant tourner Claude
 Code sous le compte du vault avec les seuls outils git, PowerShell (la carte du vault) et la lecture. Le compte du
 vault n'a pas `sudo`, et ne voit que le vault (groupe commun, voir le script du vault).
 

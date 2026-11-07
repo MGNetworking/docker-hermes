@@ -9,7 +9,8 @@
 #   aide                 la liste des actions (ne modifie rien)
 #   inbox <nom>.md       dépose une note dans 00 - Inbox ; son contenu arrive sur l'entrée standard.
 #                        Nom en minuscules avec tirets ; jamais d'écrasement ; 1 Mo au plus.
-#   commit               lance /commit du vault avec Claude Code (git et la carte du vault seulement)
+#   commit               lance `/commit --auto` du vault avec Claude Code (git et la carte du vault seulement) :
+#                        commite l'Inbox sans confirmation, puis pousse
 # Toute autre demande est refusée.
 
 set -euo pipefail
@@ -51,7 +52,7 @@ case "$action" in
     source "$HOME/.profile" > /dev/null 2>&1 || true
     set -u
     cd "$VAULT"
-    exec claude --allowedTools "Bash(git:*),Bash(pwsh:*),Read,Grep,Glob" -p "/commit"
+    exec claude --allowedTools "Bash(git:*),Bash(pwsh:*),Read,Grep,Glob" -p "/commit --auto"
     ;;
 
   *)

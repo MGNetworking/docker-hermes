@@ -1,22 +1,31 @@
-"""Mettre en place le pare-feu du serveur (UFW et les ports Docker), avec une désactivation automatique de secours.
+"""Mettre en place le pare-feu du serveur (UFW et les ports Docker), sans question : tout est lu sur la machine.
 
-Le pare-feu protège tout le serveur, pas seulement Hermes. Aucune valeur du réseau (plage, adresse, interface, port)
-n'est écrite dans le dépôt : elles sont demandées ici, appliquées sur la machine, et nulle part ailleurs.
+Le pare-feu protège tout le serveur, pas seulement Hermes. Aucune valeur du réseau n'est écrite dans le dépôt.
 
-- UFW : entrée refusée par défaut, sortie autorisée, SSH accepté depuis le réseau local.
-- Docker contourne UFW : les ports publiés par les conteneurs se filtrent dans la chaîne DOCKER-USER, écrite dans
-  /etc/ufw/after.rules pour être rechargée à chaque démarrage. Chaque port publié est accepté depuis le reverse proxy,
-  depuis le réseau local, ou nulle part (choix demandé conteneur par conteneur).
-- Avant l'activation, une désactivation automatique est programmée : si SSH ne répond plus, l'accès revient seul.
+Lu sur la machine :
+- l'interface et le réseau local : la route par défaut et l'adresse de son interface ;
+- le port SSH : `sshd -T` ;
+- les ports publiés par les conteneurs : `docker ps`.
+
+Règles :
+- UFW : entrée refusée par défaut, sortie autorisée, SSH accepté depuis le réseau local ;
+- Docker contourne UFW : les ports publiés se filtrent dans la chaîne DOCKER-USER, écrite dans /etc/ufw/after.rules
+  pour être rechargée à chaque démarrage. Par défaut, chaque port publié est accepté depuis le réseau local.
+- Facultatif : le fichier local pare-feu.local (jamais versionné, voir pare-feu.local.example) réserve des conteneurs
+  au seul reverse proxy, ou les ferme.
+
+Sécurité : une désactivation automatique est programmée avant l'activation, puis annulée seulement si la session
+SSH en cours vient du réseau local autorisé et que la règle SSH est en place.
 """
 
 from __future__ import annotations
 
 import ipaddress
+import os
 import re
 import subprocess
 
-from installation.commun import Stop, ask, ask_yes, fail, ok, run, warn
+from installation.commun import ROOT, Stop, ask_yes, fail, ok, run, warn
 
 AFTER_RULES = "/etc/ufw/after.rules"
 SAUVEGARDE = "/etc/ufw/after.rules.avant-docker-user"
@@ -24,50 +33,32 @@ DEBUT = "# BEGIN DOCKER-USER (hermes/installation/pare_feu.py)"
 FIN = "# END DOCKER-USER"
 SECOURS = "pare-feu-secours"
 DELAI_SECOURS = 180  # secondes
+LOCAL = ROOT / "pare-feu.local"
 
 
 def sudo(*args: str, entree: str | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(["sudo", *args], input=entree, capture_output=True, text=True, check=False)
 
 
-def lire_after_rules() -> str:
-    lu = sudo("cat", AFTER_RULES)
-    if lu.returncode != 0:
-        raise Stop(f"lecture de {AFTER_RULES} impossible : {lu.stderr.strip()}")
-    return lu.stdout
+# ── Ce qui se lit sur la machine ──────────────────────────────────────────────────────────────────────
 
 
-def sans_bloc(texte: str) -> str:
-    """after.rules sans un éventuel bloc DOCKER-USER posé par ce script (pour le remplacer, jamais le doubler)."""
-    return re.sub(r"\n*# BEGIN DOCKER-USER[^\n]*\n.*?# END DOCKER-USER\n?", "\n", texte, flags=re.S)
+def interface_et_reseau() -> tuple[str, ipaddress.IPv4Network]:
+    route = run(["ip", "-4", "route", "show", "default"]).stdout.split()
+    if "dev" not in route:
+        raise Stop("aucune route par défaut : interface réseau introuvable")
+    interface = route[route.index("dev") + 1]
+    adresse = re.search(r"inet (\d+\.\d+\.\d+\.\d+/\d+)", run(["ip", "-4", "-o", "addr", "show", "dev", interface]).stdout)
+    if not adresse:
+        raise Stop(f"aucune adresse IPv4 sur l'interface {interface}")
+    return interface, ipaddress.ip_interface(adresse.group(1)).network
 
 
-# ── Les valeurs, demandées et jamais écrites dans le dépôt ───────────────────────────────────────────
-
-
-def interface_par_defaut() -> str:
-    route = run(["ip", "route", "show", "default"]).stdout.split()
-    return route[route.index("dev") + 1] if "dev" in route else ""
-
-
-def demander_reseau(question: str, defaut: str = "") -> ipaddress.IPv4Network:
-    while True:
-        try:
-            return ipaddress.ip_network(ask(question, defaut), strict=False)
-        except ValueError:
-            print("  Forme attendue : a.b.c.0/24")
-
-
-def demander_adresse(question: str, reseau: ipaddress.IPv4Network) -> ipaddress.IPv4Address:
-    while True:
-        try:
-            adresse = ipaddress.ip_address(ask(question))
-        except ValueError:
-            print("  Forme attendue : a.b.c.d")
-            continue
-        if adresse in reseau:
-            return adresse
-        print(f"  Cette adresse n'est pas dans le réseau local ({reseau}).")
+def port_ssh() -> str:
+    for ligne in sudo("sshd", "-T").stdout.splitlines():
+        if ligne.startswith("port "):
+            return ligne.split()[1]
+    raise Stop("port d'écoute de sshd introuvable (`sshd -T`) : rien n'a été modifié")
 
 
 def ports_publies() -> dict[str, list[str]]:
@@ -88,22 +79,34 @@ def ports_publies() -> dict[str, list[str]]:
     return publies
 
 
-def demander_sources(publies: dict[str, list[str]]) -> tuple[list[str], list[str]]:
-    print("\nPour chaque conteneur, d'où ses ports publiés doivent être joignables :")
-    print("  p = le reverse proxy seulement   l = le réseau local   f = nulle part (fermé)")
-    par_proxy: list[str] = []
-    en_local: list[str] = []
-    for nom, ports in publies.items():
-        while True:
-            choix = ask(f"{nom} ({', '.join(ports)})", "l").lower()
-            if choix in ("p", "l", "f"):
-                break
-            print("  Répondre p, l ou f.")
-        (par_proxy if choix == "p" else en_local if choix == "l" else []).extend(ports)
-    return par_proxy, en_local
+def lire_local(reseau: ipaddress.IPv4Network) -> tuple[str | None, set[str], set[str]]:
+    """pare-feu.local : l'adresse du reverse proxy, les conteneurs qui lui sont réservés, les conteneurs fermés."""
+    if not LOCAL.exists():
+        return None, set(), set()
+    valeurs: dict[str, str] = {}
+    for ligne in LOCAL.read_text(encoding="utf-8").splitlines():
+        ligne = ligne.split("#", 1)[0].strip()
+        if "=" in ligne:
+            cle, _, valeur = ligne.partition("=")
+            valeurs[cle.strip()] = valeur.strip()
+    proxy = valeurs.get("reverse_proxy") or None
+    reserves = set(valeurs.get("via_reverse_proxy", "").split())
+    fermes = set(valeurs.get("fermes", "").split())
+    if reserves and not proxy:
+        raise Stop("pare-feu.local réserve des conteneurs au reverse proxy sans donner son adresse (reverse_proxy = …)")
+    if proxy:
+        try:
+            if ipaddress.ip_address(proxy) not in reseau:
+                raise Stop(f"pare-feu.local : le reverse proxy n'est pas dans le réseau local ({reseau})")
+        except ValueError:
+            raise Stop("pare-feu.local : reverse_proxy n'est pas une adresse IPv4") from None
+    return proxy, reserves, fermes
 
 
-def regles(interface: str, reseau: str, proxy: str, par_proxy: list[str], en_local: list[str]) -> list[str]:
+# ── Les règles ────────────────────────────────────────────────────────────────────────────────────────
+
+
+def regles(interface: str, reseau: str, proxy: str | None, par_proxy: list[str], en_local: list[str]) -> list[str]:
     lignes = [
         "-A DOCKER-USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN",
         f"-A DOCKER-USER ! -i {interface} -j RETURN",
@@ -119,18 +122,18 @@ def bloc(lignes: list[str]) -> str:
     return "\n".join(["", DEBUT, "*filter", ":DOCKER-USER - [0:0]", *lignes, "COMMIT", FIN, ""])
 
 
+def sans_bloc(texte: str) -> str:
+    """after.rules sans un éventuel bloc DOCKER-USER déjà posé (pour le remplacer, jamais le doubler)."""
+    return re.sub(r"\n*# BEGIN DOCKER-USER[^\n]*\n.*?# END DOCKER-USER\n?", "\n", texte, flags=re.S)
+
+
 # ── L'application ─────────────────────────────────────────────────────────────────────────────────────
 
 
-def port_ssh() -> str:
-    lu = sudo("sshd", "-T")
-    for ligne in lu.stdout.splitlines():
-        if ligne.startswith("port "):
-            return ligne.split()[1]
-    raise Stop("port d'écoute de sshd introuvable (`sshd -T`) : rien n'a été modifié")
-
-
-def appliquer(reseau: str, ssh: str, texte_after: str) -> None:
+def appliquer(reseau: str, ssh: str, lignes: list[str]) -> None:
+    lu = sudo("cat", AFTER_RULES)
+    if lu.returncode != 0:
+        raise Stop(f"lecture de {AFTER_RULES} impossible : {lu.stderr.strip()}")
     if sudo("test", "-e", SAUVEGARDE).returncode != 0:
         if sudo("cp", AFTER_RULES, SAUVEGARDE).returncode != 0:
             raise Stop(f"sauvegarde de {AFTER_RULES} impossible : rien n'a été modifié")
@@ -141,16 +144,25 @@ def appliquer(reseau: str, ssh: str, texte_after: str) -> None:
         fait = sudo(*commande)
         if fait.returncode != 0:
             raise Stop(f"`ufw {' '.join(commande[1:])}` a échoué : {fait.stderr.strip()}")
-    ajoutees = sudo("ufw", "show", "added").stdout
-    if f"port {ssh} " not in ajoutees + " " and f" {ssh}/tcp" not in ajoutees:
+    if f"port {ssh} " not in sudo("ufw", "show", "added").stdout + " ":
         raise Stop("la règle SSH n'apparaît pas dans `ufw show added` : activation refusée")
-    ok(f"UFW : entrée refusée, sortie autorisée, SSH (port {ssh}) depuis le réseau local")
-    if sudo("tee", AFTER_RULES, entree=texte_after).returncode != 0:
+    ok(f"UFW : entrée refusée, sortie autorisée, SSH depuis le réseau local")
+    texte = sans_bloc(lu.stdout).rstrip("\n") + "\n" + bloc(lignes)
+    if sudo("tee", AFTER_RULES, entree=texte).returncode != 0:
         raise Stop(f"écriture de {AFTER_RULES} impossible")
     ok(f"bloc DOCKER-USER écrit dans {AFTER_RULES}")
 
 
-def activer() -> None:
+def session_ssh_autorisee(reseau: ipaddress.IPv4Network) -> bool:
+    """La session SSH en cours vient-elle du réseau local autorisé ?"""
+    client = (os.environ.get("SSH_CONNECTION") or os.environ.get("SSH_CLIENT") or "").split()
+    try:
+        return bool(client) and ipaddress.ip_address(client[0]) in reseau
+    except ValueError:
+        return False
+
+
+def activer(reseau: ipaddress.IPv4Network) -> None:
     sudo("systemctl", "stop", f"{SECOURS}.timer")
     sudo("systemctl", "reset-failed", f"{SECOURS}.service", f"{SECOURS}.timer")
     secours = sudo("systemd-run", f"--unit={SECOURS}", f"--on-active={DELAI_SECOURS}", "/usr/sbin/ufw", "disable")
@@ -162,13 +174,13 @@ def activer() -> None:
     if sudo(*commande).returncode != 0:
         raise Stop(f"`{' '.join(commande)}` a échoué")
     ok("pare-feu rechargé avec les nouvelles règles" if deja_actif else "pare-feu activé")
-    print("\nOuvre maintenant une NOUVELLE connexion SSH vers le serveur, depuis ton PC.")
-    if ask_yes("La nouvelle connexion répond-elle ?", default=False):
+    if session_ssh_autorisee(reseau):
         sudo("systemctl", "stop", f"{SECOURS}.timer")
-        ok("désactivation automatique annulée : le pare-feu reste actif")
+        ok("ta session SSH vient du réseau local autorisé : désactivation automatique annulée")
     else:
-        warn(f"rien n'est annulé : le pare-feu se désactivera seul dans moins de {DELAI_SECOURS // 60} minutes")
-        raise Stop("SSH ne répond pas avec le pare-feu : vérifier le réseau local et le port SSH, puis relancer")
+        warn(f"session SSH hors du réseau local, ou lancement sans SSH : le pare-feu se désactivera seul dans "
+             f"{DELAI_SECOURS // 60} minutes ; annuler à la main si l'accès est sûr : "
+             f"sudo systemctl stop {SECOURS}.timer")
 
 
 def verifier(lignes: list[str]) -> None:
@@ -176,14 +188,12 @@ def verifier(lignes: list[str]) -> None:
     actuelles = sudo("iptables", "-S", "DOCKER-USER").stdout.splitlines()
     manquantes = [r for r in lignes if actuelles.count(r) != 1]
     if manquantes:
-        fail(f"{len(manquantes)} règle(s) DOCKER-USER absente(s) ou en double après `ufw reload`")
+        fail(f"{len(manquantes)} règle(s) DOCKER-USER absente(s) ou en double après `ufw reload` :")
         for r in manquantes:
             print(f"          {r}")
     else:
         ok(f"les {len(lignes)} règles DOCKER-USER sont présentes une seule fois, même après `ufw reload`")
-    print("\nÀ vérifier depuis ton PC : un service ouvert au réseau local répond en direct ; un service réservé au")
-    print("reverse proxy ne répond plus en direct, mais répond par son nom de domaine. Puis `sudo reboot` et recommencer.")
-    print(f"Revenir en arrière : sudo ufw disable ; sudo cp {SAUVEGARDE} {AFTER_RULES} ; sudo iptables -F DOCKER-USER")
+    print(f"\nRevenir en arrière : sudo ufw disable ; sudo cp {SAUVEGARDE} {AFTER_RULES} ; sudo iptables -F DOCKER-USER")
 
 
 def executer() -> None:
@@ -193,29 +203,27 @@ def executer() -> None:
     if subprocess.run(["sudo", "-v"], check=False).returncode != 0:
         raise Stop("sudo refusé : rien n'a été modifié")
 
-    texte = lire_after_rules()
-    if DEBUT.split(" (")[0] in texte:
-        warn("un bloc DOCKER-USER existe déjà dans after.rules : il sera remplacé, pas doublé")
-
-    print("\nLes valeurs du réseau : elles ne sont écrites que sur cette machine.")
-    reseau = demander_reseau("Plage du réseau local (a.b.c.0/24)")
-    proxy = demander_adresse("Adresse du reverse proxy", reseau)
-    while True:
-        interface = ask("Interface réseau du serveur", interface_par_defaut())
-        if re.fullmatch(r"[A-Za-z0-9._-]{1,15}", interface):
-            break
-        print("  Un nom d'interface (voir : ip -br addr).")
+    interface, reseau = interface_et_reseau()
     ssh = port_ssh()
-    par_proxy, en_local = demander_sources(ports_publies())
+    publies = ports_publies()
+    proxy, reserves, fermes = lire_local(reseau)
+    inconnus = (reserves | fermes) - set(publies)
+    if inconnus:
+        warn(f"pare-feu.local cite des conteneurs sans port publié, ignorés : {', '.join(sorted(inconnus))}")
 
-    lignes = regles(interface, str(reseau), str(proxy), par_proxy, en_local)
-    print(f"\nUFW : entrée refusée sauf SSH (port {ssh}) depuis {reseau} ; sortie autorisée.")
-    print("Règles DOCKER-USER :")
-    for r in lignes:
-        print(f"  {r}")
-    if not ask_yes("Appliquer ces règles et activer le pare-feu ?", default=False):
+    par_proxy = [p for nom, ports in publies.items() if nom in reserves for p in ports]
+    en_local = [p for nom, ports in publies.items() if nom not in reserves and nom not in fermes for p in ports]
+    lignes = regles(interface, str(reseau), proxy, par_proxy, en_local)
+
+    ok(f"interface {interface}, réseau local {reseau}, SSH port {ssh} (lus sur la machine)")
+    for nom, ports in publies.items():
+        source = "reverse proxy seulement" if nom in reserves else "fermé" if nom in fermes else "réseau local"
+        print(f"          {nom} ({', '.join(ports)}) : {source}")
+    if not LOCAL.exists():
+        print("          (aucun pare-feu.local : tous les ports publiés sont ouverts au réseau local, fermés au-delà)")
+    if not ask_yes("Appliquer et activer le pare-feu ?", default=False):
         raise Stop("rien n'a été modifié")
 
-    appliquer(str(reseau), ssh, sans_bloc(texte).rstrip("\n") + "\n" + bloc(lignes))
-    activer()
+    appliquer(str(reseau), ssh, lignes)
+    activer(reseau)
     verifier(lignes)

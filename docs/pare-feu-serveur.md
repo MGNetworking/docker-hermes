@@ -6,11 +6,13 @@
 > **Aucune valeur propre au réseau** (adresse, plage, interface, port) n'est écrite dans ce dépôt public. Elles sont
 > données dans la session, au moment d'appliquer la procédure (étape 0), et n'existent que sur le serveur.
 
-**Le plus simple : `python3 install.py --pare-feu`**, depuis le dossier du dépôt, sur le serveur. Il fait tout ce qui suit :
-il demande les valeurs du réseau, propose pour chaque conteneur la source de ses ports publiés (reverse proxy, réseau
-local ou nulle part), affiche les règles et attend ton accord, programme la désactivation de secours, active le
-pare-feu, te demande de vérifier une nouvelle connexion SSH, puis vérifie les règles après un rechargement. Relancé, il
-remplace son bloc sans le doubler. La procédure à la main, ci-dessous, reste la référence de ce qu'il fait.
+**Le plus simple : `python3 install.py --pare-feu`**, depuis le dossier du dépôt, sur le serveur, **sans question** :
+il lit lui-même l'interface et le réseau local (route par défaut), le port SSH (`sshd -T`) et les ports publiés
+(`docker ps`), affiche ce qu'il va faire et attend un seul accord. Par défaut, chaque port publié est ouvert au réseau
+local et fermé au-delà. Pour réserver des conteneurs au seul reverse proxy, ou les fermer : copier
+`pare-feu.local.example` en `pare-feu.local` (jamais versionné) et le remplir. La désactivation de secours est annulée
+d'elle-même si la session SSH en cours vient du réseau local autorisé. Relancé, il remplace son bloc sans le doubler.
+La procédure à la main, ci-dessous, reste la référence de ce qu'il fait.
 
 ## Ce que le pare-feu autorise
 

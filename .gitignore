@@ -11,3 +11,6 @@ data/
 # OS
 .DS_Store
 Thumbs.db
+
+# Réglages locaux du pare-feu (valeurs du réseau) — jamais versionnés
+pare-feu.local

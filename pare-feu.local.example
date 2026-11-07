@@ -1,0 +1,13 @@
+# pare-feu.local — réglages facultatifs du pare-feu, propres au serveur. Ne jamais le versionner (.gitignore).
+# Copier en « pare-feu.local » sur le serveur, à côté d'install.py, puis : python3 install.py --pare-feu
+#
+# Sans ce fichier, chaque port publié par un conteneur est ouvert au réseau local et fermé au-delà.
+
+# Adresse du reverse proxy du réseau, seule source acceptée pour les conteneurs de via_reverse_proxy.
+reverse_proxy = <adresse du reverse proxy>
+
+# Conteneurs joints seulement par le reverse proxy (noms de « docker ps », séparés par des espaces).
+via_reverse_proxy = <conteneur> <conteneur>
+
+# Conteneurs dont les ports publiés sont fermés à tout le réseau.
+fermes =

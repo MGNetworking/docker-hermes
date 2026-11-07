@@ -85,6 +85,11 @@ services:
       # Slack
       # SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
 
+      # --- Docker, par le proxy ------------------------------------------------
+      # Hermes ne voit jamais le vrai socket : il parle au service docker-proxy, qui ne laisse passer
+      # que la lecture et le démarrage, l'arrêt et le redémarrage des conteneurs existants.
+      DOCKER_HOST: tcp://docker-proxy:2375
+
       # --- Diagnostic ---------------------------------------------------------
       # HERMES_SKIP_CONFIG_MIGRATION: 0   # mettre à 1 en diagnostic uniquement
       # HERMES_ALLOW_ROOT_GATEWAY: 0      # NE PAS activer sauf nécessité absolue
@@ -106,9 +111,8 @@ services:
       # Persistance complète Hermes
       - ./data:/opt/data
 
-      # Docker Backend — permet à Hermes de piloter le démon Docker de l'hôte
-      # (docker build, docker run, inspection de conteneurs…)
-      - /var/run/docker.sock:/var/run/docker.sock
+      # Pas de /var/run/docker.sock ici : le socket complet vaut un accès root à l'hôte.
+      # Docker passe par le service docker-proxy (DOCKER_HOST ci-dessus).
 
       # Fuseau horaire de l'hôte
       - /etc/localtime:/etc/localtime:ro
@@ -128,6 +132,9 @@ services:
     ###########################################################################
     networks:
       - hermes
+
+    depends_on:
+      - docker-proxy
 
     ###########################################################################
     # Mémoire partagée
@@ -157,6 +164,30 @@ services:
         reservations:
           cpus: "1"
           memory: 2G
+
+  #############################################################################
+  # docker-proxy — le seul à voir le socket Docker de l'hôte
+  #############################################################################
+  # Filtre l'API Docker : tout est refusé, sauf ce qui est accordé ici (1).
+  # Accordé : lister et inspecter les conteneurs et les images ; démarrer, arrêter, redémarrer
+  # un conteneur existant. Refusé : créer, supprimer, exec, volumes, réseaux, build, et tout POST
+  # hors démarrage/arrêt/redémarrage (POST=0).
+  # Version épinglée ; aucun port publié : joignable seulement par Hermes, sur le réseau hermes.
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:v0.5.0
+    container_name: hermes-docker-proxy
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1
+      IMAGES: 1
+      ALLOW_START: 1
+      ALLOW_STOP: 1
+      ALLOW_RESTARTS: 1
+      POST: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - hermes
 
 ###############################################################################
 # Réseaux

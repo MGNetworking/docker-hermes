@@ -52,13 +52,17 @@ signifie exposé — l'authentification n'est pas optionnelle (voir plus bas).
 
 ## Sécurité — les trois points qui comptent
 
-**1. `/var/run/docker.sock` est monté dans le conteneur.**
-C'est le Docker Backend : Hermes pilote le démon Docker de l'hôte. Un accès au socket Docker
-équivaut à un accès root sur l'hôte. Conséquence directe : quiconque atteint la Gateway API ou
-le Dashboard peut, via l'agent, agir en root sur la machine.
+**1. Hermes ne voit pas `/var/run/docker.sock` : il passe par le service `docker-proxy`.**
+Le socket complet équivaut à un accès root sur l'hôte : quiconque atteindrait l'agent (Gateway API,
+Dashboard, Telegram, ou un texte piégé qu'il lit) agirait en root sur la machine. Décision du
+2026-11-07 : seul `docker-proxy` (`tecnativa/docker-socket-proxy`, version épinglée, aucun port
+publié) monte le socket ; Hermes le joint par `DOCKER_HOST=tcp://docker-proxy:2375` et ne peut que
+lister et inspecter les conteneurs et les images, et démarrer, arrêter ou redémarrer un conteneur
+existant. Créer un conteneur, `exec`, volumes, réseaux et build sont refusés (`POST=0`).
 
-Ce montage est un choix assumé, pas un oubli. Ne pas le retirer sans demande — mais ne jamais
-proposer d'exposer Hermes publiquement sans authentification ni reverse proxy devant.
+Ne jamais remonter le socket dans le service `hermes`. Un besoin Docker nouveau s'accorde dans les
+variables de `docker-proxy`, une par une, en vérifiant qu'aucune ne permet de créer un conteneur.
+Et ne jamais exposer Hermes publiquement sans authentification ni reverse proxy devant.
 
 **2. `API_SERVER_KEY` n'a pas de valeur par défaut.**
 Contrairement à toutes les autres variables du compose, elle s'écrit `${API_SERVER_KEY}` sans

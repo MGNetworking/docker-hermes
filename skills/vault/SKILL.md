@@ -57,8 +57,12 @@ ssh -F /opt/data/home/.ssh/config vault inbox nom-de-la-note.md < /tmp/nom-de-la
   ---
   ```
 
-  `intention` vaut `distiller` (à découper en notes), `garder-tel-quel` (une réflexion à garder entière) ou
-  `brouillon`.
+  `intention` vaut `distiller` (à découper en notes), `garder-tel-quel` (une réflexion à garder entière),
+  `brouillon`, ou `à-évaluer` (ci-dessous).
+- **Un résumé à évaluer** : quand l'utilisateur demande de résumer une lecture (article, vidéo, documentation) pour
+  décider plus tard s'il la garde. Le résumé tient en quelques lignes et sépare deux sections : « Ce que l'auteur
+  affirme » et « Ce qui est établi » (vérifiable, ou reconnu largement). `intention: à-évaluer`, et `source` porte
+  l'URL telle quelle. Au tri, l'utilisateur décidera de l'absorber ou de la jeter.
 - Aucun tag, aucun lien `[[...]]` : le vault les crée lui-même au triage.
 - Une note existante n'est jamais écrasée : choisir un autre nom.
 

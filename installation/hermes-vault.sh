@@ -28,16 +28,8 @@ INTERDITS="Bash(git push --force:*),Bash(git push -f:*),Bash(git push --force-wi
 CONSIGNE="Tu es lancé à distance par Hermes, l'assistant de l'utilisateur, qui te transmet ses demandes et lui \
 relaie tes réponses : aucun dialogue direct, l'outil AskUserQuestion ne fonctionne pas. Quand une étape demande un \
 choix sur le contenu du vault (où ranger, garder ou jeter), arrête-toi et termine ta réponse par la question, avec \
-des choix numérotés ; sa réponse arrivera dans la suite de cette conversation. Ne lui pose jamais de question sur git : \
-la mécanique est à toi. Réponses courtes : elles sont lues sur un téléphone. \
-Mener chaque tâche jusqu'au bout, sans rien laisser à faire à l'utilisateur : \
-- supprimer ou déplacer un fichier toi-même : git rm -f / git mv pour un fichier suivi, sinon git add puis git rm -f, \
-ou rm / mv ; \
-- quand la tâche a modifié le vault, la terminer par un commit (format du skill /commit ; la demande de l'utilisateur \
-vaut confirmation, ne pas lui faire valider le message) qui ne contient que tes changements : ne jamais commiter \
-.obsidian/ (réglages de l'Obsidian du serveur) ni ce que tu n'as pas modifié ; \
-- puis pousser : git pull --rebase --autostash, puis git push. Jamais de push forcé. Seulement si un vrai conflit \
-reste après le pull : git rebase --abort, et le signaler en une ligne (le commit reste fait sur le serveur)."
+des choix numérotés ; sa réponse arrivera dans la suite de cette conversation. Réponses courtes : elles sont lues sur \
+un téléphone. Suis les procédures du vault (son CLAUDE.md, ses règles, ses skills) et mène chaque tâche jusqu'au bout."
 
 refuser() { echo "refusé : $1" >&2; exit 2; }
 

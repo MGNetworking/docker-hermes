@@ -14,9 +14,9 @@ relayer, dans les deux sens. Il ne peut rien faire d'autre sur le serveur.
    `suite`).
 5. Hermes te donne le résultat.
 
-Une tâche qui modifie le vault se termine toujours par un commit et un push, sans question sur git : Claude Code
-récupère d'abord ce que le dépôt distant a reçu (`git pull --rebase --autostash`), et ne commite jamais les réglages
-de l'Obsidian du serveur (`.obsidian/`). Il ne s'arrête que sur un vrai conflit, qu'il te signale.
+La mécanique git appartient au vault, pas au gardien : Claude Code suit les procédures du vault. Le tri (`/triage`)
+fait toujours récupérer (`git pull`), trier, commiter, pousser, sur le serveur comme sur le PC. Les captures de
+l'Inbox ne sont pas versionnées : elles n'entrent dans git qu'une fois triées.
 
 Claude Code est lancé à chaque demande, puis s'arrête : rien ne tourne entre deux demandes, et la conversation est
 gardée sur le disque du compte du vault. Chaque demande et chaque réponse appellent le modèle : elles sont payantes.

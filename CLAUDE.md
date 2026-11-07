@@ -3,7 +3,7 @@
 Déploiement Docker de **Hermes Agent** (NousResearch) : un agent IA exposant un Dashboard web
 et une Gateway API compatible OpenAI.
 
-Ce dépôt vit dans `D:\Projet\agentic-os\hermes`, l'un des projets d'agentic-os. Il hérite du `CLAUDE.md`
+Ce dépôt est l'un des projets d'agentic-os. Il hérite du `CLAUDE.md`
 d'agentic-os (règles communes à tous ses projets) ; ce fichier ne porte que ce qui concerne Hermes lui-même. Ce qui
 décrit l'ensemble (Hermes avec Foundation et le vault) vit dans le dépôt agentic-os.
 

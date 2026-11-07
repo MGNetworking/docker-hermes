@@ -84,7 +84,7 @@ docker compose up -d
 Comme avec Claude Code : une conversation dans le terminal, où le copier-coller fonctionne. Depuis le PC :
 
 ```bash
-ssh -t max@<IP du serveur> "cd ~/docker_home/docker-hermes && docker compose exec -it hermes hermes"
+ssh -t <utilisateur>@<serveur> "cd <dossier du dépôt> && docker compose exec -it hermes hermes"
 ```
 
 Ou, une fois connecté au serveur, depuis le dossier du dépôt :
@@ -127,6 +127,7 @@ Le fichier `docker-compose.yml` est entièrement paramétrable via `.env`. Les p
 
 - [Providers LLM supportés](audi-technique.md#12-providers-llm) — Anthropic, OpenAI, Google, Ollama, OpenRouter…
 - [Sécurité](audi-technique.md#20-sécurité) — auth Dashboard, clé API, docker.sock, CORS
+- [Pare-feu du serveur](docs/pare-feu-serveur.md) — UFW et les ports Docker (`DOCKER-USER`), procédure à appliquer une fois
 - [Reverse Proxy](audi-technique.md#15-reverse-proxy) — intégration Caddy / Traefik / Nginx
 - [Ressources Docker](audi-technique.md#19-ressources-docker) — CPU, RAM, mémoire partagée Playwright
 

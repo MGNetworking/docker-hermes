@@ -76,8 +76,25 @@ docker compose up -d
 |-----------|-----|
 | Dashboard | http://localhost:9119 |
 | Gateway API | http://localhost:8642 |
+| Terminal (par SSH) | voir ci-dessous |
 
-### 4. Suivre les logs
+### 4. Parler à Hermes depuis un terminal, par SSH
+
+Comme avec Claude Code : une conversation dans le terminal, où le copier-coller fonctionne. Depuis le PC :
+
+```bash
+ssh -t max@<IP du serveur> "cd ~/docker_home/docker-hermes && docker compose exec -it hermes hermes"
+```
+
+Ou, une fois connecté au serveur, depuis le dossier du dépôt :
+
+```bash
+docker compose exec -it hermes hermes
+```
+
+C'est une session de plus, comme celle du Dashboard ou de Telegram : chacune a son propre fil de conversation.
+
+### 5. Suivre les logs
 
 ```bash
 docker compose logs -f

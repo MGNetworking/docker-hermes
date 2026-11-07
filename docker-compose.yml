@@ -44,6 +44,8 @@ services:
       # Option A — Identifiants locaux
       HERMES_DASHBOARD_BASIC_AUTH_USERNAME: ${HERMES_DASHBOARD_BASIC_AUTH_USERNAME:-}
       HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: ${HERMES_DASHBOARD_BASIC_AUTH_PASSWORD:-}
+      # Clé de signature des sessions : sans elle, une clé tirée au hasard à chaque démarrage déconnecte à chaque redémarrage
+      HERMES_DASHBOARD_BASIC_AUTH_SECRET: ${HERMES_DASHBOARD_BASIC_AUTH_SECRET:-}
       #
       # Option B — OAuth Nous Portal
       # HERMES_DASHBOARD_OAUTH_CLIENT_ID: ${HERMES_DASHBOARD_OAUTH_CLIENT_ID:-}

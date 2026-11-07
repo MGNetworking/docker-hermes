@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import getpass
+import json
 import os
 import re
 import secrets
@@ -41,7 +42,8 @@ EXAMPLE = ROOT / ".env.example"
 REGLAGES = ROOT / "reglages.conf"
 CONTAINER = "hermes"
 LLM_KEYS = ["DEEPSEEK_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GOOGLE_API_KEY", "OPENROUTER_API_KEY"]
-SECRETS = {*LLM_KEYS, "API_SERVER_KEY", "HERMES_DASHBOARD_BASIC_AUTH_PASSWORD", "TELEGRAM_BOT_TOKEN"}
+GENERATED = {"API_SERVER_KEY", "HERMES_DASHBOARD_BASIC_AUTH_SECRET"}  # clés tirées au hasard, jamais demandées
+SECRETS = {*LLM_KEYS, *GENERATED, "HERMES_DASHBOARD_BASIC_AUTH_PASSWORD", "TELEGRAM_BOT_TOKEN"}
 HEALTH_TIMEOUT = 180  # secondes
 
 
@@ -251,7 +253,7 @@ def complete_env() -> dict[str, str]:
     print(f"\nVariables nouvelles dans .env.example : {', '.join(missing)}")
     lines = [f"\n# --- Ajouté par install.py le {time.strftime('%Y-%m-%d')} ---"]
     for key in missing:
-        if key == "API_SERVER_KEY":
+        if key in GENERATED:
             value = secrets.token_hex(32)
         else:
             value = ask_secret(f"{key} (Entrée pour laisser vide)") if key in SECRETS else example[key]
@@ -276,8 +278,9 @@ def configure_env(reconfigure: bool) -> tuple[dict[str, str], bool]:
     print("\nConfiguration du .env")
     values = dict(current)
     values["PUID"], values["PGID"] = str(os.getuid()), str(os.getgid())
-    if not current.get("API_SERVER_KEY"):
-        values["API_SERVER_KEY"] = secrets.token_hex(32)
+    for key in GENERATED:
+        if not current.get(key):
+            values[key] = secrets.token_hex(32)
     values["HERMES_DASHBOARD_BASIC_AUTH_USERNAME"] = ask(
         "Utilisateur du Dashboard", current.get("HERMES_DASHBOARD_BASIC_AUTH_USERNAME") or "admin")
     if not (current.get("HERMES_DASHBOARD_BASIC_AUTH_PASSWORD") and ask_yes("Garder le mot de passe du Dashboard ?")):
@@ -299,14 +302,12 @@ def configure_env(reconfigure: bool) -> tuple[dict[str, str], bool]:
 # ── 3. Le démarrage ───────────────────────────────────────────────────────────────────────────────────
 
 
-def dashboard_code(port: str) -> int | None:
-    """Le code HTTP du Dashboard (401 : il demande le mot de passe), ou None s'il ne répond pas."""
+def dashboard_status(port: str) -> dict | None:
+    """L'état public du Dashboard (`/api/status`), ou None s'il ne répond pas encore."""
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}", timeout=10) as r:
-            return r.status
-    except urllib.error.HTTPError as e:
-        return e.code
-    except OSError:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/status", timeout=10) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except (OSError, ValueError):
         return None
 
 
@@ -326,17 +327,16 @@ def wait_ready(values: dict[str, str]) -> None:
     state = ""
     while time.monotonic() < deadline:
         state = run(["docker", "inspect", "-f", "{{.State.Status}} {{.State.Health.Status}}", CONTAINER]).stdout.strip()
-        code = dashboard_code(port)
-        if state.startswith("running") and code is not None:
+        status = dashboard_status(port)
+        if state.startswith("running") and status is not None:
             ok("Hermes démarré")
-            if code == 401:
-                ok(f"le Dashboard (port {port}) répond et demande le mot de passe")
-            elif code == 200:
-                warn(f"le Dashboard (port {port}) répond sans demander de mot de passe")
+            providers = status.get("auth_providers") or []
+            if status.get("auth_required") is True and providers:
+                ok(f"le Dashboard (port {port}) exige une connexion ({', '.join(providers)})")
             else:
-                warn(f"le Dashboard (port {port}) répond avec le code {code}")
-            if not state.endswith("healthy") or state.endswith("unhealthy"):
-                warn(f"état Docker : {state} (le healthcheck interroge le Dashboard sans mot de passe : à vérifier)")
+                warn(f"le Dashboard (port {port}) est ouvert sans connexion : vérifier HERMES_DASHBOARD_BASIC_AUTH_*")
+            if state.endswith("unhealthy"):
+                warn(f"état Docker : {state} (voir `docker compose logs --tail 60 hermes`)")
             return
         time.sleep(5)
     raise Stop(f"Hermes ne répond pas après {HEALTH_TIMEOUT} s (état : {state or 'inconnu'}) : "

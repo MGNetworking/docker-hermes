@@ -22,18 +22,20 @@ Le vault vit sur le serveur, sous un compte dédié, que tu joins en SSH. **Ce n
 vault : c'est Claude Code**, qui y connaît les règles et les commandes (`/triage`, `/commit`…). Toi, tu transmets la
 demande de l'utilisateur, et tu lui relaies la réponse.
 
-**Toute demande sur le vault** : transmettre le texte de l'utilisateur tel quel, sans le reformuler, sur l'entrée
-standard.
+**Toute demande sur le vault** : transmettre le texte de l'utilisateur **mot pour mot**, sur l'entrée standard. Ne
+rien reformuler, ne rien ajouter : pas de commande, pas de consigne technique (git, pull, push…), pas d'explication.
+Claude Code connaît le vault et décide lui-même comment faire ; c'est la demande de l'utilisateur qu'il doit lire,
+pas ton interprétation. Même règle pour une réponse transmise avec `suite`.
 
 ```bash
-ssh -F /opt/data/home/.ssh/config vault claude < /tmp/demande.txt
+ssh vault claude < /tmp/demande.txt
 ```
 
 **Quand Claude Code pose une question** (sa réponse se termine par des choix) : la relayer telle quelle à
 l'utilisateur, puis transmettre sa réponse dans la même conversation :
 
 ```bash
-ssh -F /opt/data/home/.ssh/config vault suite < /tmp/reponse.txt
+ssh vault suite < /tmp/reponse.txt
 ```
 
 `claude` ouvre une nouvelle conversation ; `suite` continue la dernière. Ne jamais mélanger deux sujets : une
@@ -43,7 +45,7 @@ nouvelle demande, c'est `claude`.
 argument.
 
 ```bash
-ssh -F /opt/data/home/.ssh/config vault inbox nom-de-la-note.md < /tmp/nom-de-la-note.md
+ssh vault inbox nom-de-la-note.md < /tmp/nom-de-la-note.md
 ```
 
 - Nom en minuscules avec tirets, terminé par `.md` (exemple : `idee-planification-hebdo.md`).
@@ -69,12 +71,16 @@ ssh -F /opt/data/home/.ssh/config vault inbox nom-de-la-note.md < /tmp/nom-de-la
 **La liste des actions** (ne modifie rien) :
 
 ```bash
-ssh -F /opt/data/home/.ssh/config vault aide
+ssh vault aide
 ```
 
 ## Pitfalls
 
 - Ne jamais répondre toi-même à une question de Claude Code : c'est l'utilisateur qui décide.
+- Ne jamais compléter la demande de l'utilisateur avec ce que tu crois utile (« relance git pull… ») : la transmettre
+  mot pour mot.
+- `ssh vault …` trouve seul sa configuration (`~/.ssh/config`). Si `vault` est inconnu, ajouter
+  `-F /opt/data/home/.ssh/config`.
 - Chaque `claude` ou `suite` appelle un modèle payant : un appel par demande ou par réponse de l'utilisateur, pas
   plus.
 - `refusé : …` : la demande ne respecte pas les règles ci-dessus ; corriger, ne jamais contourner.
